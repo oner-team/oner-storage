@@ -1,0 +1,43 @@
+{
+  "name": "natty-storage",
+  "version": "1.0.0-alpha-1",
+  "description": "",
+  "repository": "https://github.com/Jias/natty-storage.git",
+  "author": "gnosaij",
+  "main": "dist/natty-storage.min.js",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "HISTORY.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "natty-storage",
+    "data",
+    "database",
+    "db",
+    "promise-api"
+  ],
+  "devDependencies": {
+    "babel-loader": "^5.1.3",
+    "browser-sync": "~2.9.6",
+    "del": "^2.0.1",
+    "es5-shim": "^4.3.1",
+    "expect.js": "~0.3.1",
+    "express": "^4.13.3",
+    "gulp": "^3.9.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.4.0",
+    "lie": "^3.0.2",
+    "mocha": "^2.3.0",
+    "mocha-loader": "~0.7.1",
+    "webpack-stream": "^2.1.0"
+  },
+  "scripts": {
+    "dev": "gulp watch",
+    "build": "gulp pack-commonjs && gulp min"
+  },
+  "license": "MIT"
+}

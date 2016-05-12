@@ -22,7 +22,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
         });
     });
 
-    describe('env',function() {
+    describe('environment',function() {
         it.skip('support localStorage: ' + NattyStorage.supportLocalStorage);
         it.skip('support sessionStorage: ' + NattyStorage.supportSessionStorage);
     });
@@ -96,19 +96,9 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
         });
     });
 
+    describe('set/get', function() {
 
-
-
-
-
-    describe('localstorage set/get', function() {
-
-        // it('key is required', function() {
-        //     expect(new NattyStorage({
-        //         type: 'localStorage'
-        //     })).to.throwError();
-        // });
-        var ls;
+        let ls;
         
         beforeEach('reset', function () {
             ls = new NattyStorage({
@@ -122,32 +112,106 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
         });
         
         it('set pure string value without `key`', function () {
-            var value = 'foo';
+            let value = 'foo';
             ls.set(null, value);
             expect(ls.get()).to.be(value);
         });
 
         it('set pure string value with `key`', function () {
-            var value = 'x';
+            let value = 'x';
             ls.set('x', value);
             expect(ls.get('x')).to.be(value);
         });
 
         it('set value with `path`', function () {
-            var value = 'x';
+            let value = 'x';
             ls.set('x.y', value);
             expect(ls.get('x').y).to.be(value);
             expect(ls.get('x.y')).to.be(value);
         });
 
-        it('set/get value with `path:\\\\.`', function () {
-            var value = 'x';
+        it('set/get value with `path:\\\.`', function () {
+            let value = 'x';
             ls.set('x.y\\.y.z', value);
             expect(ls.get('x.y\\.y').z).to.be(value);
             expect(ls.get('x.y\\.y.z')).to.be(value);
         });
 
+        it('set path value with merging', function () {
+            ls.set(null, {
+                x: {
+                    y: 'y'
+                }
+            });
 
+            // x 应该同时有 y 和 z
+            ls.set('x.z', 'z');
 
+            expect(ls.get('x.y')).to.be('y');
+            expect(ls.get('x.z')).to.be('z');
+
+            // ls.delete();
+        });
+
+        it('set path value with override', function () {
+            ls.set(null, {
+                x: {
+                    y: {
+                        z: 'z'
+                    }
+                }
+            });
+
+            // 原 y 对应的对象值将被覆盖
+            ls.set('x.y', 'y');
+
+            expect(ls.get('x.y')).to.be('y');
+        });
+    });
+
+    describe('remove', function () {
+
+        let ls;
+        let data = {
+            x: {
+                y: {
+                    z: 'z',
+                    zz: 'zz'
+                }
+            }
+        };
+
+        beforeEach('reset', function () {
+            ls = new NattyStorage({
+                type: 'localStorage',
+                key: 'foo'
+            });
+        });
+
+        it('remove partial data by path', function() {
+            ls.set(null, data);
+            ls.remove('x.y.z');
+            expect(ls.get('x.y').zz).to.be('zz');
+        });
+
+        it('remove complete data by path', function () {
+            ls.set(null, data);
+            ls.remove('x.y');
+            expect(JSON.stringify(ls.get('x'))).to.be('{}');
+            expect(ls.get('x.y')).to.be(undefined);
+        });
+
+        it('remove by a un-existed path', function () {
+            ls.set(null, data);
+            ls.remove('x.y.foo');
+            expect(JSON.stringify(ls.get())).to.be(JSON.stringify(data));
+        });
+
+        it('remove all data', function () {
+            ls.set(null, data);
+            ls.remove();
+            expect(JSON.stringify(ls.get())).to.be('{}');
+        });
+        
     });
 });

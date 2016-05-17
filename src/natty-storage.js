@@ -18,19 +18,15 @@ function createStorage(storage) {
 		// NOTE  值为undefined的情况, JSON.stringify方法会将键删除
 		// JSON.stringify({x:undefined}) === "{}"
 		set: function (key, value) {
-			value = typeof value === 'object' ? JSON.stringify(value) : value;
 			storage.removeItem(key);
-			storage.setItem(key, value);
+			storage.setItem(key, JSON.stringify(value));
 		},
 		get: function (key) {
 			var value = storage.getItem(key);
 			if (!value) return null;
-			if (value.indexOf('{"') === 0 || value.indexOf('["') === 0
-				|| (value.length === 2 && (value === '{}' || value === '[]'))) {
-				try {
-					value = JSON.parse(value);
-				} catch (e) {
-				}
+			try {
+				value = JSON.parse(value);
+			} catch (e) {
 			}
 			return value;
 		},
@@ -78,7 +74,11 @@ function setValueByPath(path, value, data) {
 			bottomData[key] = bottomData[key] || {};
 			bottomData = bottomData[key];
 		} else {
-			bottomData[key] = value;
+			if (isPlainObject(bottomData)) {
+				bottomData[key] = value;
+			} else {
+				throw new Error('Cannot create property `'+key+'` on non-object value, path:`'+path+'`');
+			}
 		}
 	}
 	return data;
@@ -131,8 +131,11 @@ const defaultGlobalConfig = {
 	// 版本号
 	version: '',
 
-	// 有效期
-	expire: null
+	// 有效期长, 单位ms
+	duration: 0,
+
+    // 有效期至, 时间戳
+    validUntil: 0
 };
 
 // 运行时的全局配置
@@ -163,25 +166,64 @@ class NattyStorage {
 		t._storage = createStorage(t.config.type);
 
 		t._CHECK_KEY = 'natty-storage-check-' + t.config.key;
+
 		t._checkData = t._storage.get(t._CHECK_KEY);
+
+		// 当前`key`的`storage`是否已经存在
+		t._isNew = t._checkData === null;
+		// console.log('is new t._checkData', t._isNew);
 
 		t._DATA_KEY = 'natty-storage-data-' + t.config.key;
 		t._placeholderUsed = FALSE;
 
-		// 没有对应的本地缓存 或 本地缓存已过期 新建
-		if (!t.isExisted() || t.isOutdated()) {
-			t._storage.set(t._CHECK_KEY, {
-				version: t.config.version
-			});
+		// 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
+		t._createStamp = +new Date();
+
+		// 没有对应的本地缓存 或 本地缓存已过期 则 创建新的`storage`实例
+		// debugger
+		if (t._isNew || t.isOutdated()) {
+			// console.log('create new t._checkData');
+			// 新的数据内容
 			t._storage.set(t._DATA_KEY, t._data = {});
 		}
 		// 使用已有的本地缓存
 		else {
+			// console.log('use cached t._checkData');
 			t._data = t._storage.get(t._DATA_KEY);
 			if (t._data === null) {
 				t._storage.set(t._DATA_KEY, t._data = {});
 			}
 		}
+
+		// 更新验证数据
+		t._storage.set(t._CHECK_KEY, t._checkData = {
+			version:    t.config.version,
+			lastUpdate: t._createStamp,
+			duration:   t.config.duration,
+			validUntil: t.config.validUntil
+		});
+
+	}
+
+	/**
+	 * 判断当前`key`的`storage`是否已经过期
+	 * @returns {boolean}
+	 */
+	isOutdated() {
+		let t = this;
+		if (t.config.version && t.config.version !== t._checkData.version) {
+			return TRUE;
+		}
+
+		let now = +new Date();
+		// 注意要使用`_checkData`的`duration`验证, 而不是用`config`的`duration`验证!!
+		if (t._checkData.duration && now - t._checkData.lastUpdate > t._checkData.duration) {
+			return TRUE;
+		}
+
+
+		// console.log('outdated: false');
+		return FALSE;
 	}
 
 	/**
@@ -247,28 +289,6 @@ class NattyStorage {
 			t.set({});
 		}
 		return t;
-	}
-
-	/**
-	 * 判断当前`key`的`storage`是否已经存在
-	 * @returns {boolean}
-	 */
-	isExisted() {
-		return this._checkData !== null;
-	}
-
-	/**
-	 * 判断当前`key`的`storage`是否已经过期
-	 * @returns {boolean}
-	 */
-	isOutdated() {
-		let t = this;
-		let outdated = false;
-		if (t.config.version && t.config.version !== t._checkData.version) {
-			outdated = true;
-		}
-
-		return outdated;
 	}
 
 	/**

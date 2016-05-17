@@ -11,6 +11,10 @@ let getId = function () {
     return count++;
 }
 
+let _describe = function () {
+
+};
+
 let VERSION;
 __BUILD_VERSION__
 
@@ -29,7 +33,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
     describe('localStorage', function() {
 
-        describe('constructor', function() {
+        describe('storage checking', function() {
             it('create storage instance with cached data', function(){
                 let id = getId();
                 let ls = new NattyStorage({
@@ -62,7 +66,6 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 ls.set(value);
 
                 // 版本过期
-                // debugger
                 let ls2 = new NattyStorage({
                     type: 'localStorage',
                     key: id, // 保证之前存在
@@ -86,7 +89,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 let value = {x:'x'};
                 ls.set(value);
 
-                // 版本过期
+                // 版本不过期
                 let ls2 = new NattyStorage({
                     type: 'localStorage',
                     key: id // 保证之前存在
@@ -95,6 +98,62 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 expect(JSON.stringify(ls2.get())).to.be(JSON.stringify(value));
 
                 ls.destroy();
+            });
+
+            it('check `lastUpdate` is updated when an new storage was initialized', function (done) {
+                let id = 'test-last-update'
+                let ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: id,
+                    duration: 200
+                });
+
+                // 未过期
+                setTimeout(function () {
+                    let ls2 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id,
+                        duration: 300
+                    });
+                    expect(ls2._checkData.lastUpdate - ls._checkData.lastUpdate).to.be.above(40);
+                    ls.destroy();
+                    done();
+                }, 50);
+            });
+
+            it('create storage with expire checking', function (done) {
+                let id = 'test-expire';
+                let ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: id,
+                    duration: 200
+                });
+                ls.set('x', 'x');
+
+                // 未过期
+                setTimeout(function () {
+                    let ls2 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id,
+                        duration: 100
+                    });
+                    ls2.set('y', 'y');
+                    expect(ls2.get('x')).to.be('x');
+                    expect(ls2.get('y')).to.be('y');
+                }, 50);
+
+                // 过期
+                setTimeout(function () {
+                    let ls3 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id,
+                        duration: 300
+                    });
+
+                    expect(JSON.stringify(ls3.get())).to.be('{}');;
+                    ls.destroy();
+                    done();
+                }, 300);
             });
         });
 
@@ -207,6 +266,10 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 });
             });
 
+            afterEach(function () {
+                ls.destroy();
+            });
+
             it('remove partial data by path', function() {
                 ls.set(data);
                 ls.remove('x.y.z');
@@ -231,6 +294,75 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 ls.remove();
                 expect(JSON.stringify(ls.get())).to.be('{}');
             });
+        });
+
+        describe('big data', function () {
+            this.timeout(1000*60*5);
+            let ls;
+            let s1MB = require('./1m');
+            let s1KB = require('./1k');
+
+            ls = new NattyStorage({
+                type: 'localStorage',
+                key: 'big'
+            });
+
+
+            // beforeEach('reset', function () {
+            //     ls = new NattyStorage({
+            //         type: 'localStorage',
+            //         key: 'big'
+            //     });
+            // });
+            //
+            // afterEach(function () {
+            //     // ls.destroy();
+            // });
+
+            // it.only('1m', function (done) {
+                console.time('t1');
+                let s4MB = s1MB + s1MB + s1MB;
+                let s100KB = '';
+                for (let i=1, l=100; i<=l; i++) {
+                    s100KB += s1KB;
+                }
+                // let s10KB = '';
+                // for (let i=1, l=10; i<=l; i++) {
+                //     s10KB += s1KB;
+                // }
+
+                // ls.set('x', s100KB);
+                // console.log(ls.get('x').length);
+                // ls.set('x', s4MB);
+                // console.log(ls.get('x').length);
+
+                let data = s4MB;
+                let i = 1;
+                while(i<=30){
+                    i++;
+                    data += s100KB;
+                    // console.log('+100KB', data.length);
+                    try {
+                        ls.set('x', data);
+                    } catch (e) {
+                        while(i<=30){
+                            i++;
+                            data += s1KB;
+                            // console.log('+1KB', data.length);
+                            try {
+                                ls.set('x', data);
+                            } catch (e) {
+                                console.log(e);
+                                console.log('data: ' + data.length/1024/1024 + 'MB');
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                console.timeEnd('t1');
+                it.skip('max storage length: ' + (data.length/1024/1024).toFixed(2) + 'MB');
+            // });
         });
     });
 });

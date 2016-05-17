@@ -27,191 +27,210 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
         it.skip('support sessionStorage: ' + NattyStorage.supportSessionStorage);
     });
 
-    describe('constructor', function() {
-        it('create storage instance with cached data', function(){
-            let id = getId();
-            let ls = new NattyStorage({
-                type: 'localStorage',
-                key: id // 保证之前不存在
+    describe('localStorage', function() {
+
+        describe('constructor', function() {
+            it('create storage instance with cached data', function(){
+                let id = getId();
+                let ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: id // 保证之前不存在
+                });
+
+                expect(JSON.stringify(ls.get())).to.be('{}');
+                ls.set('x', 'x');
+
+                let ls2 = new NattyStorage({
+                    type: 'localStorage',
+                    key: id // 保证之前存在
+                });
+
+                expect(JSON.stringify(ls2.get())).to.be('{"x":"x"}');
+
+                ls.destroy();
             });
 
-            expect(JSON.stringify(ls.get())).to.be('{}');
-            ls.set('x', 'x');
+            it('create storage instance with version checking: outdated', function(){
+                let id = getId();
+                let ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: id, // 保证之前不存在
+                    version: '1.0'
+                });
 
-            let ls2 = new NattyStorage({
-                type: 'localStorage',
-                key: id // 保证之前存在
+                let value = {x:'x'};
+                ls.set(value);
+
+                // 版本过期
+                // debugger
+                let ls2 = new NattyStorage({
+                    type: 'localStorage',
+                    key: id, // 保证之前存在
+                    version: '2.0'
+                });
+
+                expect(JSON.stringify(ls2.get())).to.be('{}');
+
+                ls.destroy();
             });
 
-            expect(JSON.stringify(ls2.get())).to.be('{"x":"x"}');
 
-            ls.destroy();
-        });
+            it('create storage instance without version checking', function(){
+                let id = getId();
+                let ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: id, // 保证之前不存在
+                    version: '1.0'
+                });
 
-        it('create storage instance with version checking: outdated', function(){
-            let id = getId();
-            let ls = new NattyStorage({
-                type: 'localStorage',
-                key: id, // 保证之前不存在
-                version: '1.0'
-            });
+                let value = {x:'x'};
+                ls.set(value);
 
-            let value = {x:'x'};
-            ls.set(null, value);
+                // 版本过期
+                let ls2 = new NattyStorage({
+                    type: 'localStorage',
+                    key: id // 保证之前存在
+                });
 
-            // 版本过期
-            // debugger
-            let ls2 = new NattyStorage({
-                type: 'localStorage',
-                key: id, // 保证之前存在
-                version: '2.0'
-            });
+                expect(JSON.stringify(ls2.get())).to.be(JSON.stringify(value));
 
-            expect(JSON.stringify(ls2.get())).to.be('{}');
-
-            ls.destroy();
-        });
-
-
-        it('create storage instance without version checking', function(){
-            let id = getId();
-            let ls = new NattyStorage({
-                type: 'localStorage',
-                key: id, // 保证之前不存在
-                version: '1.0'
-            });
-
-            let value = {x:'x'};
-            ls.set(null, value);
-
-            // 版本过期
-            let ls2 = new NattyStorage({
-                type: 'localStorage',
-                key: id // 保证之前存在
-            });
-
-            expect(JSON.stringify(ls2.get())).to.be(JSON.stringify(value));
-
-            ls.destroy();
-        });
-    });
-
-    describe('set/get', function() {
-
-        let ls;
-        
-        beforeEach('reset', function () {
-            ls = new NattyStorage({
-                type: 'localStorage',
-                key: 'foo'
+                ls.destroy();
             });
         });
 
-        afterEach('clear', function () {
-            ls.destroy();
-        });
-        
-        it('set pure string value without `key`', function () {
-            let value = 'foo';
-            ls.set(null, value);
-            expect(ls.get()).to.be(value);
-        });
+        describe('set/get', function() {
 
-        it('set pure string value with `key`', function () {
-            let value = 'x';
-            ls.set('x', value);
-            expect(ls.get('x')).to.be(value);
-        });
+            let ls;
 
-        it('set value with `path`', function () {
-            let value = 'x';
-            ls.set('x.y', value);
-            expect(ls.get('x').y).to.be(value);
-            expect(ls.get('x.y')).to.be(value);
-        });
-
-        it('set/get value with `path:\\\.`', function () {
-            let value = 'x';
-            ls.set('x.y\\.y.z', value);
-            expect(ls.get('x.y\\.y').z).to.be(value);
-            expect(ls.get('x.y\\.y.z')).to.be(value);
-        });
-
-        it('set path value with merging', function () {
-            ls.set(null, {
-                x: {
-                    y: 'y'
-                }
+            beforeEach('reset', function () {
+                ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: 'foo'
+                });
             });
 
-            // x 应该同时有 y 和 z
-            ls.set('x.z', 'z');
+            afterEach('clear', function () {
+                ls.destroy();
+            });
 
-            expect(ls.get('x.y')).to.be('y');
-            expect(ls.get('x.z')).to.be('z');
+            it('set pure string value without `key`', function () {
+                let value = 'foo';
+                ls.set(value);
+                expect(ls.get()).to.be(value);
+            });
 
-            // ls.delete();
+            it('set pure string value with `key`', function () {
+                let value = 'x';
+                ls.set('x', value);
+                expect(ls.get('x')).to.be(value);
+            });
+
+            it('set value with `path`', function () {
+                let value = 'x';
+                ls.set('x.y', value);
+                expect(ls.get('x').y).to.be(value);
+                expect(ls.get('x.y')).to.be(value);
+            });
+
+            it('set/get value with `path:\\\.`', function () {
+                let value = 'x';
+                ls.set('x.y\\.y.z', value);
+                expect(ls.get('x.y\\.y').z).to.be(value);
+                expect(ls.get('x.y\\.y.z')).to.be(value);
+            });
+
+            it('set path value with merging', function () {
+                ls.set({
+                    x: {
+                        y: 'y'
+                    }
+                });
+
+                // x 应该同时有 y 和 z
+                ls.set('x.z', 'z');
+
+                expect(ls.get('x.y')).to.be('y');
+                expect(ls.get('x.z')).to.be('z');
+
+                // ls.delete();
+            });
+
+            it('set path value with override', function () {
+                ls.set({
+                    x: {
+                        y: {
+                            z: 'z'
+                        }
+                    }
+                });
+
+                // 原 y 对应的对象值将被覆盖
+                ls.set('x.y', 'y');
+
+                expect(ls.get('x.y')).to.be('y');
+            });
+
+            it('set undefined', function () {
+                ls.set('x', undefined);
+                // 此时
+                // `storage`里对应的值的"{}"
+                // 而`ls._data`的值是 {x: undefined}
+                // `JSON.stringify`会删除值为`undefined`的键
+                expect(JSON.stringify(ls.get())).to.be("{}");
+            });
+
+            it('setting invalid value should throw an error', function () {
+                ls.set('x', 'x');
+                expect(function () {
+                    ls.set('x.y', 'y');
+                }).to.throwError();
+            });
+
         });
 
-        it('set path value with override', function () {
-            ls.set(null, {
+        describe('remove', function () {
+
+            let ls;
+            let data = {
                 x: {
                     y: {
-                        z: 'z'
+                        z: 'z',
+                        zz: 'zz'
                     }
                 }
+            };
+
+            beforeEach('reset', function () {
+                ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: 'foo'
+                });
             });
 
-            // 原 y 对应的对象值将被覆盖
-            ls.set('x.y', 'y');
+            it('remove partial data by path', function() {
+                ls.set(data);
+                ls.remove('x.y.z');
+                expect(ls.get('x.y').zz).to.be('zz');
+            });
 
-            expect(ls.get('x.y')).to.be('y');
-        });
-    });
+            it('remove complete data by path', function () {
+                ls.set(data);
+                ls.remove('x.y');
+                expect(JSON.stringify(ls.get('x'))).to.be('{}');
+                expect(ls.get('x.y')).to.be(undefined);
+            });
 
-    describe('remove', function () {
+            it('remove by a un-existed path', function () {
+                ls.set(data);
+                ls.remove('x.y.foo');
+                expect(JSON.stringify(ls.get())).to.be(JSON.stringify(data));
+            });
 
-        let ls;
-        let data = {
-            x: {
-                y: {
-                    z: 'z',
-                    zz: 'zz'
-                }
-            }
-        };
-
-        beforeEach('reset', function () {
-            ls = new NattyStorage({
-                type: 'localStorage',
-                key: 'foo'
+            it('remove all data', function () {
+                ls.set(data);
+                ls.remove();
+                expect(JSON.stringify(ls.get())).to.be('{}');
             });
         });
-
-        it('remove partial data by path', function() {
-            ls.set(null, data);
-            ls.remove('x.y.z');
-            expect(ls.get('x.y').zz).to.be('zz');
-        });
-
-        it('remove complete data by path', function () {
-            ls.set(null, data);
-            ls.remove('x.y');
-            expect(JSON.stringify(ls.get('x'))).to.be('{}');
-            expect(ls.get('x.y')).to.be(undefined);
-        });
-
-        it('remove by a un-existed path', function () {
-            ls.set(null, data);
-            ls.remove('x.y.foo');
-            expect(JSON.stringify(ls.get())).to.be(JSON.stringify(data));
-        });
-
-        it('remove all data', function () {
-            ls.set(null, data);
-            ls.remove();
-            expect(JSON.stringify(ls.get())).to.be('{}');
-        });
-        
     });
 });

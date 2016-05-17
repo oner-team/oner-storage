@@ -15,6 +15,8 @@ __BUILD_VERSION__
 function createStorage(storage) {
 	storage = window[storage];
 	return {
+		// NOTE  值为undefined的情况, JSON.stringify方法会将键删除
+		// JSON.stringify({x:undefined}) === "{}"
 		set: function (key, value) {
 			value = typeof value === 'object' ? JSON.stringify(value) : value;
 			storage.removeItem(key);
@@ -34,6 +36,18 @@ function createStorage(storage) {
 		},
 		remove: function (key) {
 			storage.removeItem(key);
+		}
+	}
+}
+
+function createVariable() {
+	let storage = {};
+	return {
+		set: function (key, value) {
+			storage[key] = value;
+		},
+		get: function (key) {
+
 		}
 	}
 }
@@ -129,9 +143,7 @@ let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
  *     type: 'localstorage', // sessionstorage, variable
  *	   key: 'city',
  *	   // 验证是否有效，如果是首次创建该LS，则不执行验证
- *	   check: {
- *	   	   version: '1.0'
- *	   }
+ *	   version: '1.0'
  *  })
  */
 class NattyStorage {
@@ -180,20 +192,24 @@ class NattyStorage {
 	 * instance.set(null, object)
 	 * instance.set('foo', any-type)
 	 * instance.set('foo.bar', any-type)
-	 * @note instance.set(data) 这种是不支持的, 因为不严谨, 第二个参数不传 或 传的值就是undefined, 无法明确区分
+	 * @note ls.set('x') 相当于 ls.set('x', undefined)
 	 */
 	set(path, data) {
+
 		let t = this;
-		if (path !== null) {
-			setValueByPath(path, data, t._data);
-		} else {
-			if (isPlainObject(data)) {
-				t._data = data;
+
+		if (arguments.length === 1) {
+			if (isPlainObject(path)) {
+				t._data = path;
 			} else {
-				t._data[PLACEHOLDER] = data;
+				t._data[PLACEHOLDER] = path;
 				t._placeholderUsed = TRUE;
 			}
+		} else {
+			setValueByPath(path, data, t._data);
 		}
+
+		// 同步到storage
 		t._storage.set(t._DATA_KEY, t._data);
 		return t;
 	}
@@ -228,7 +244,7 @@ class NattyStorage {
 			removeKeyAndValueByPath(path, t._data);
 			t._storage.set(t._DATA_KEY, t._data);
 		} else {
-			t.set(null, {});
+			t.set({});
 		}
 		return t;
 	}

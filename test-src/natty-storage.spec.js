@@ -6,14 +6,15 @@ const expect = require('expect.js');
 // require('natty-storage')已被`webpack`映射到全局`NattyDB`对象
 const NattyStorage = require('natty-storage');
 
+const s1MB = require('./1m');
+const s1KB = require('./1k');
+
 let count = 1;
 let getId = function () {
     return count++;
 }
 
-let _describe = function () {
-
-};
+let _describe = function () {};
 
 let VERSION;
 __BUILD_VERSION__
@@ -27,34 +28,141 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
     });
 
     describe('environment',function() {
+        this.timeout(1000*60*5);
         it.skip('support localStorage: ' + NattyStorage.supportLocalStorage);
         it.skip('support sessionStorage: ' + NattyStorage.supportSessionStorage);
+
+        let checkMax = function (type, cb) {
+            let ls = new NattyStorage({
+                type: type,
+                key: 'big'
+            });
+
+            let startMB = s1MB + s1MB + s1MB;
+            let s100KB = '';
+            for (let i=1, l=100; i<=l; i++) {
+                s100KB += s1KB;
+            }
+
+            let s10KB = '';
+            for (let i=1, l=10; i<=l; i++) {
+                s10KB += s1KB;
+            }
+
+            let data = startMB;
+
+
+            let setMore100KB = function(){
+                data += s100KB;
+                // console.log('add 100KB: ', (data.length/1024).toFixed(2) + 'KB');
+                return ls.set('x', data);
+            };
+
+            let setMore10KB = function(){
+                data += s10KB;
+                // console.log('add 10KB: ', (data.length/1024).toFixed(2) + 'KB');
+                return ls.set('x', data);
+            };
+
+            let mb = function (data) {
+                return (data.length/1024/1024).toFixed(2) + 'MB';
+            };
+
+
+            let i = 1;
+            let p = Promise.resolve();
+            while(i<30){
+                i++;
+                p = p.then(setMore100KB);
+            }
+            p.then(function () {
+                cb('> ' + mb(data));
+            }).catch(function () {
+                let ii = 1;
+                let pp = Promise.resolve();
+                while(ii<50){
+                    ii++;
+                    pp = pp.then(setMore10KB);
+                }
+                pp.then(function () {
+                    cb('> ' +  mb(data));
+                }).catch(function () {
+                    cb(mb(data));
+                    ls.destroy();
+                });
+            });
+        };
+
+        // 找出最大容量
+        setTimeout(function () {
+            checkMax('localStorage', function (max) {
+                document.getElementById('maxLS').innerHTML = max;
+                // done();
+            });
+            checkMax('sessionStorage', function (max) {
+                document.getElementById('maxSS').innerHTML = max;
+                // done();
+            });
+        }, 1000);
     });
 
     describe('localStorage', function() {
 
+        describe('as soon as possiable with lazy init', function () {
+            it('time for creating a storage instance should be within 3ms', function (done) {
+                let bigData = s1MB + s1MB;
+                let ls = new NattyStorage({
+                    key: 'big-data'
+                });
+                ls.set('x',bigData).then(function () {
+                    try {
+                        // 统计ls2的创建时间
+                        let startTime = +new Date();
+                        let ls2 = new NattyStorage({
+                            key: 'big-data'
+                        });
+                        let endTime = +new Date();
+                        // console.log(endTime - startTime);
+
+                        expect(endTime - startTime).to.below(3);
+                        ls.destroy();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                }).catch(function (e) {
+                    console.warn(e);
+                });
+            });
+        });
+
         describe('storage checking', function() {
-            it('create storage instance with cached data', function(){
+            it('create storage instance with cached data', function(done){
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
                     key: id // 保证之前不存在
                 });
 
-                expect(JSON.stringify(ls.get())).to.be('{}');
-                ls.set('x', 'x');
+                ls.set('x', 'x').then(function () {
+                    let ls2 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id // 保证之前存在
+                    });
 
-                let ls2 = new NattyStorage({
-                    type: 'localStorage',
-                    key: id // 保证之前存在
+                    ls2.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be('{"x":"x"}');
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
                 });
-
-                expect(JSON.stringify(ls2.get())).to.be('{"x":"x"}');
-
-                ls.destroy();
             });
 
-            it('create storage instance with version checking: outdated', function(){
+            it('create storage instance with version checking: outdated', function(done){
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
@@ -72,13 +180,19 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                     version: '2.0'
                 });
 
-                expect(JSON.stringify(ls2.get())).to.be('{}');
-
-                ls.destroy();
+                ls2.get().then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be('{}');
+                        ls.destroy();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
 
-            it('create storage instance without version checking', function(){
+            it('create storage instance without version checking', function(done) {
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
@@ -95,30 +209,47 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                     key: id // 保证之前存在
                 });
 
-                expect(JSON.stringify(ls2.get())).to.be(JSON.stringify(value));
-
-                ls.destroy();
+                ls2.get().then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be(JSON.stringify(value));
+                        ls.destroy();
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
             it('check `lastUpdate` is updated when an new storage was initialized', function (done) {
-                let id = 'test-last-update'
+                let id = 'test-last-update';
                 let ls = new NattyStorage({
                     type: 'localStorage',
                     key: id,
                     duration: 200
                 });
 
-                // 未过期
-                setTimeout(function () {
-                    let ls2 = new NattyStorage({
-                        type: 'localStorage',
-                        key: id,
-                        duration: 300
-                    });
-                    expect(ls2._checkData.lastUpdate - ls._checkData.lastUpdate).to.be.above(40);
-                    ls.destroy();
-                    done();
-                }, 50);
+                // 这里的调用一次`get`是为了调用一次内部的`_lazyInit`方法
+                ls.get().then(function () {
+
+                    // 未过期的情况下, 创建新的`storage`时, 会顺延有效期
+                    setTimeout(function () {
+                        let ls2 = new NattyStorage({
+                            type: 'localStorage',
+                            key: id,
+                            duration: 300
+                        });
+                        ls2.get().then(function () {
+                            try {
+                                expect(ls2._checkData.lastUpdate - ls._checkData.lastUpdate).to.be.above(40);
+                                ls.destroy();
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        })
+                    }, 50);
+                });
+
             });
 
             it('create storage with expire checking', function (done) {
@@ -130,18 +261,6 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 });
                 ls.set('x', 'x');
 
-                // 未过期
-                setTimeout(function () {
-                    let ls2 = new NattyStorage({
-                        type: 'localStorage',
-                        key: id,
-                        duration: 100
-                    });
-                    ls2.set('y', 'y');
-                    expect(ls2.get('x')).to.be('x');
-                    expect(ls2.get('y')).to.be('y');
-                }, 50);
-
                 // 过期
                 setTimeout(function () {
                     let ls3 = new NattyStorage({
@@ -150,9 +269,15 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                         duration: 300
                     });
 
-                    expect(JSON.stringify(ls3.get())).to.be('{}');;
-                    ls.destroy();
-                    done();
+                    ls3.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be('{}');;
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
                 }, 300);
             });
         });
@@ -172,33 +297,59 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 ls.destroy();
             });
 
-            it('set pure string value without `key`', function () {
+            it('set pure string value without `key`', function (done) {
                 let value = 'foo';
                 ls.set(value);
-                expect(ls.get()).to.be(value);
+                ls.get().then(function (data) {
+                    try {
+                        expect(data).to.be(value);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set pure string value with `key`', function () {
+            it('set pure string value with `key`', function (done) {
                 let value = 'x';
                 ls.set('x', value);
-                expect(ls.get('x')).to.be(value);
+                ls.get('x').then(function (data) {
+                    try {
+                        expect(data).to.be(value);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set value with `path`', function () {
+            it('set value with `path`', function (done) {
                 let value = 'x';
                 ls.set('x.y', value);
-                expect(ls.get('x').y).to.be(value);
-                expect(ls.get('x.y')).to.be(value);
+                ls.get('x').then(function (data) {
+                    try {
+                        expect(data.y).to.be(value);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set/get value with `path:\\\.`', function () {
+            it('set/get value with `path:\\\.`', function (done) {
                 let value = 'x';
                 ls.set('x.y\\.y.z', value);
-                expect(ls.get('x.y\\.y').z).to.be(value);
-                expect(ls.get('x.y\\.y.z')).to.be(value);
+                ls.get('x.y\\.y').then(function (data) {
+                    try {
+                        expect(data.z).to.be(value);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set path value with merging', function () {
+            it('set path value with merging', function (done) {
                 ls.set({
                     x: {
                         y: 'y'
@@ -207,14 +358,18 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                 // x 应该同时有 y 和 z
                 ls.set('x.z', 'z');
-
-                expect(ls.get('x.y')).to.be('y');
-                expect(ls.get('x.z')).to.be('z');
-
-                // ls.delete();
+                ls.get('x').then(function (data) {
+                    try {
+                        expect(data.y).to.be('y');
+                        expect(data.z).to.be('z');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set path value with override', function () {
+            it('set path value with override', function (done) {
                 ls.set({
                     x: {
                         y: {
@@ -225,24 +380,44 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                 // 原 y 对应的对象值将被覆盖
                 ls.set('x.y', 'y');
-
-                expect(ls.get('x.y')).to.be('y');
+                ls.get('x.y').then(function (data) {
+                    try {
+                        expect(data).to.be('y');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('set undefined', function () {
+            it('set undefined', function (done) {
                 ls.set('x', undefined);
                 // 此时
                 // `storage`里对应的值的"{}"
                 // 而`ls._data`的值是 {x: undefined}
                 // `JSON.stringify`会删除值为`undefined`的键
-                expect(JSON.stringify(ls.get())).to.be("{}");
+                ls.get().then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be("{}");
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('setting invalid value should throw an error', function () {
+            it('setting invalid value should throw an error', function (done) {
                 ls.set('x', 'x');
-                expect(function () {
-                    ls.set('x.y', 'y');
-                }).to.throwError();
+                ls.set('x.y', 'y').then(function () {
+
+                }).catch(function (e) {
+                    try {
+                        expect(e.message).to.contain('on non-object value');
+                        done();
+                    } catch (e2) {
+                        done(e2)
+                    }
+                });
             });
 
         });
@@ -250,7 +425,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
         describe('remove', function () {
 
             let ls;
-            let data = {
+            let value = {
                 x: {
                     y: {
                         z: 'z',
@@ -270,99 +445,62 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 ls.destroy();
             });
 
-            it('remove partial data by path', function() {
-                ls.set(data);
+            it('remove partial data by path', function(done) {
+                ls.set(value);
                 ls.remove('x.y.z');
-                expect(ls.get('x.y').zz).to.be('zz');
+                ls.get('x.y').then(function (data) {
+                    try {
+                        expect(data.zz).to.be('zz');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('remove complete data by path', function () {
-                ls.set(data);
+            it('remove complete data by path', function (done) {
+                ls.set(value);
                 ls.remove('x.y');
-                expect(JSON.stringify(ls.get('x'))).to.be('{}');
-                expect(ls.get('x.y')).to.be(undefined);
+                ls.get('x').then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be('{}');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('remove by a un-existed path', function () {
-                ls.set(data);
+            it('remove by a un-existed path', function (done) {
+                ls.set(value);
                 ls.remove('x.y.foo');
-                expect(JSON.stringify(ls.get())).to.be(JSON.stringify(data));
+                ls.get().then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be(JSON.stringify(data));
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
 
-            it('remove all data', function () {
-                ls.set(data);
+            it('remove all data', function (done) {
+                ls.set(value);
                 ls.remove();
-                expect(JSON.stringify(ls.get())).to.be('{}');
+                ls.get().then(function (data) {
+                    try {
+                        expect(JSON.stringify(data)).to.be('{}');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
             });
         });
 
-        describe('big data', function () {
-            this.timeout(1000*60*5);
-            let ls;
-            let s1MB = require('./1m');
-            let s1KB = require('./1k');
-
-            ls = new NattyStorage({
-                type: 'localStorage',
-                key: 'big'
-            });
+        describe('catch error', function () {
 
 
-            // beforeEach('reset', function () {
-            //     ls = new NattyStorage({
-            //         type: 'localStorage',
-            //         key: 'big'
-            //     });
-            // });
-            //
-            // afterEach(function () {
-            //     // ls.destroy();
-            // });
-
-            // it.only('1m', function (done) {
-                console.time('t1');
-                let s4MB = s1MB + s1MB + s1MB;
-                let s100KB = '';
-                for (let i=1, l=100; i<=l; i++) {
-                    s100KB += s1KB;
-                }
-                // let s10KB = '';
-                // for (let i=1, l=10; i<=l; i++) {
-                //     s10KB += s1KB;
-                // }
-
-                // ls.set('x', s100KB);
-                // console.log(ls.get('x').length);
-                // ls.set('x', s4MB);
-                // console.log(ls.get('x').length);
-
-                let data = s4MB;
-                let i = 1;
-                while(i<=30){
-                    i++;
-                    data += s100KB;
-                    // console.log('+100KB', data.length);
-                    try {
-                        ls.set('x', data);
-                    } catch (e) {
-                        while(i<=30){
-                            i++;
-                            data += s1KB;
-                            // console.log('+1KB', data.length);
-                            try {
-                                ls.set('x', data);
-                            } catch (e) {
-                                console.log(e);
-                                console.log('data: ' + data.length/1024/1024 + 'MB');
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-                console.timeEnd('t1');
-                it.skip('max storage length: ' + (data.length/1024/1024).toFixed(2) + 'MB');
-            // });
         });
     });
 });

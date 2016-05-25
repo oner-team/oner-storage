@@ -1,7 +1,6 @@
 "use strict";
 
 const {extend, isPlainObject} = require('./util');
-
 const hasWindow = 'undefined' !== typeof window;
 const NULL = null;
 const EMPTY = '';
@@ -18,11 +17,13 @@ function createStorage(storage) {
 		// NOTE  值为undefined的情况, JSON.stringify方法会将键删除
 		// JSON.stringify({x:undefined}) === "{}"
 		set: function (key, value) {
-			storage.removeItem(key);
+			// TODO 看看safari是否还有bug
+			// storage.removeItem(key);
 			storage.setItem(key, JSON.stringify(value));
 		},
 		get: function (key) {
 			var value = storage.getItem(key);
+			// alert(localStorage[key]);
 			if (!value) return null;
 			try {
 				value = JSON.parse(value);
@@ -83,7 +84,6 @@ function setValueByPath(path, value, data) {
 	}
 	return data;
 }
-
 
 function getValueByPath(path, data, isKey) {
 	isKey = isKey || false;
@@ -166,6 +166,20 @@ class NattyStorage {
 		t._storage = createStorage(t.config.type);
 
 		t._CHECK_KEY = 'natty-storage-check-' + t.config.key;
+		t._DATA_KEY = 'natty-storage-data-' + t.config.key;
+		t._placeholderUsed = FALSE;
+
+		// 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
+		t._createStamp = +new Date();
+	}
+
+	/**
+	 * 惰性初始化 在首次调用`set、get、remove`方法时才执行一次 且只执行一次
+	 * @private
+	 * @note 为什么要做惰性初始化, 因为
+	 */
+	_lazyInit() {
+		let t = this;
 
 		t._checkData = t._storage.get(t._CHECK_KEY);
 
@@ -173,14 +187,7 @@ class NattyStorage {
 		t._isNew = t._checkData === null;
 		// console.log('is new t._checkData', t._isNew);
 
-		t._DATA_KEY = 'natty-storage-data-' + t.config.key;
-		t._placeholderUsed = FALSE;
-
-		// 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
-		t._createStamp = +new Date();
-
 		// 没有对应的本地缓存 或 本地缓存已过期 则 创建新的`storage`实例
-		// debugger
 		if (t._isNew || t.isOutdated()) {
 			// console.log('create new t._checkData');
 			// 新的数据内容
@@ -202,7 +209,6 @@ class NattyStorage {
 			duration:   t.config.duration,
 			validUntil: t.config.validUntil
 		});
-
 	}
 
 	/**
@@ -228,32 +234,42 @@ class NattyStorage {
 
 	/**
 	 * 设置指指定路径的数据
-	 * @param path {String} optional 要获取的值的路径 如果不传 则返回整体值
+	 * @param path {Any} optional 要设置的值的路径 或 要设置的完整值
 	 * @param value {Any} 值
 	 *
-	 * instance.set(null, object)
+	 * instance.set(object)
 	 * instance.set('foo', any-type)
 	 * instance.set('foo.bar', any-type)
-	 * @note ls.set('x') 相当于 ls.set('x', undefined)
+	 * @note ls.set('x') 则 整个值为 'x'
 	 */
 	set(path, data) {
 
 		let t = this;
-
-		if (arguments.length === 1) {
-			if (isPlainObject(path)) {
-				t._data = path;
-			} else {
-				t._data[PLACEHOLDER] = path;
-				t._placeholderUsed = TRUE;
-			}
-		} else {
-			setValueByPath(path, data, t._data);
-		}
+		let argumentLength = arguments.length;
 
 		// 同步到storage
-		t._storage.set(t._DATA_KEY, t._data);
-		return t;
+		return new Promise(function(resolve, reject) {
+			try {
+				if (!t._data) {
+					t._lazyInit();
+				}
+
+				if (argumentLength === 1) {
+					if (isPlainObject(path)) {
+						t._data = path;
+					} else {
+						t._data[PLACEHOLDER] = path;
+						t._placeholderUsed = TRUE;
+					}
+				} else {
+					setValueByPath(path, data, t._data);
+				}
+				t._storage.set(t._DATA_KEY, t._data);
+				resolve();
+			} catch (e) {
+				reject(e);
+			}
+		});
 	}
 
 	/**
@@ -267,13 +283,25 @@ class NattyStorage {
 	 */
 	get(path) {
 		let t = this;
-		if (path) {
-			return getValueByPath(path, t._data);
-		} else if (t._placeholderUsed) {
-			return t._data[PLACEHOLDER];
-		} else {
-			return t._data;
-		}
+		return new Promise(function (resolve, reject) {
+			try {
+				let data;
+				if (!t._data) {
+					t._lazyInit();
+				}
+
+				if (path) {
+					data = getValueByPath(path, t._data);
+				} else if (t._placeholderUsed) {
+					data = t._data[PLACEHOLDER];
+				} else {
+					data = t._data;
+				}
+				resolve(data);
+			} catch (e) {
+				reject(e);
+			}
+		});
 	}
 
 	/**
@@ -282,13 +310,22 @@ class NattyStorage {
 	 */
 	remove(path) {
 		let t = this;
-		if (path) {
-			removeKeyAndValueByPath(path, t._data);
-			t._storage.set(t._DATA_KEY, t._data);
-		} else {
-			t.set({});
-		}
-		return t;
+		return new Promise(function (resolve, reject) {
+			try {
+				if (!t._data) {
+					t._lazyInit();
+				}
+				if (path) {
+					removeKeyAndValueByPath(path, t._data);
+					t._storage.set(t._DATA_KEY, t._data);
+				} else {
+					t.set({});
+				}
+				resolve();
+			} catch (e) {
+				reject(e);
+			}
+		});
 	}
 
 	/**
@@ -301,12 +338,7 @@ class NattyStorage {
 	}
 }
 
-NattyStorage.count = 0;
-
-
 NattyStorage.version = VERSION;
-
-
 NattyStorage.supportLocalStorage = hasWindow ? !!window.localStorage : FALSE;
 NattyStorage.supportSessionStorage = hasWindow ? !!window.sessionStorage : FALSE;
 
@@ -327,25 +359,5 @@ NattyStorage.setGlobal = (options) => {
 NattyStorage.getGlobal = (property) => {
 	return property ? runtimeGlobalConfig[property] : runtimeGlobalConfig;
 }
-
-//
-// let context = new NattyFetch.Context(/*..*/);
-//
-// /**
-//  * `Context.namespace`方法用于声明一个名称空间, 可以
-//  * 重复调用, 如果指定的名称空间已存在, 则返回已有的.
-//  * 这样, `Context.namespace`方法可以重复调用, 解决
-//  * 旧版的`Context.create`方法必须把所有`api`都声集中
-//  * 声明, 而不能追加声明的限制.
-//  */
-// context.subject('order').api({
-// 	create: {},
-// 	pay: {}
-// });
-
-
-
-
-
 
 module.exports = NattyStorage;

@@ -6,7 +6,7 @@ storage plus for javascript
 TODO：这里的每一个特点都加上demo说明。
 
 * 以异步(`Promise`)方式使用`localStorage`和`sessionStorage`，减少阻塞，并优雅地捕获异常(如超出浏览器最大限制)。
-* 支持以路径(`Path`)方式设置和获取数据，相对于直接使用原生对象，大大减少了代码量。
+* 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生对象，大大减少了代码量。
 * 封装了三种有效性(`validity`)判断，版本号(`version`)、有效期长(`duration`)、有效期至(`validUntil`)，不再重复编码。
 
 ## 使用
@@ -34,7 +34,9 @@ ls.set('fo\\.o.bar', 'x').then().catch(); // 如果路径中的某个键包含`.
 获取数据
 
 ```js
-ls.get().then().catch() // 获取完整数据
+ls.get().then(function(data){
+    // console.log(data);
+}).catch() // 获取完整数据
 ls.get('foo').then().catch() // 获取指定的键的数据
 ls.get('foo.bar').then().catch(); // 获取指定的路径的数据
 ls.get('fo\\.o.bar').then().catch(); // 如果路径中的某个键包含`.`号, 转义即可

@@ -2,7 +2,7 @@
 
 storage plus for javascript
 
-> 提升开发者的体验至关重要，请关注`Natty`系列小工具，必有收获！
+> 开发者的体验至关重要，请加星(★Star)支持`Natty`系列的`js`工具库，必有收获！
 
 ## 特点
 

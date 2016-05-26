@@ -77,6 +77,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
             }
             p.then(function () {
                 cb('> ' + mb(data));
+                ls.destroy();
             }).catch(function () {
                 let ii = 1;
                 let pp = Promise.resolve();
@@ -86,6 +87,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 }
                 pp.then(function () {
                     cb('> ' +  mb(data));
+                    ls.destroy();
                 }).catch(function () {
                     cb(mb(data));
                     ls.destroy();
@@ -108,8 +110,8 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
     describe('localStorage', function() {
 
-        describe('as soon as possiable with lazy init', function () {
-            it('time for creating a storage instance should be within 3ms', function (done) {
+        describe('initialize', function () {
+            it('as soon as possiable with lazy init', function (done) {
                 let bigData = s1MB + s1MB;
                 let ls = new NattyStorage({
                     key: 'big-data'
@@ -131,13 +133,12 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                         done(e);
                     }
                 }).catch(function (e) {
-                    console.warn(e);
+                    console.error(e);
                 });
             });
-        });
 
-        describe('storage checking', function() {
-            it('create storage instance with cached data', function(done){
+
+            it('create storage instance with existed data', function(done){
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
@@ -161,62 +162,65 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                     });
                 });
             });
+        });
 
-            it('create storage instance with version checking: outdated', function(done){
+        describe('validity checking', function() {
+
+            it('tag checking: invalid', function(done){
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
                     key: id, // 保证之前不存在
-                    version: '1.0'
+                    tag: '1.0'
                 });
 
-                let value = {x:'x'};
-                ls.set(value);
+                ls.set('x', 'x').then(function () {
+                    // 版本过期
+                    let ls2 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id, // 保证之前存在
+                        tag: '2.0'
+                    });
 
-                // 版本过期
-                let ls2 = new NattyStorage({
-                    type: 'localStorage',
-                    key: id, // 保证之前存在
-                    version: '2.0'
-                });
-
-                ls2.get().then(function (data) {
-                    try {
-                        expect(JSON.stringify(data)).to.be('{}');
-                        ls.destroy();
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
+                    ls2.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be('{}');
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
                 });
             });
 
 
-            it('create storage instance without version checking', function(done) {
+            it('tag checking: valid', function(done) {
                 let id = getId();
                 let ls = new NattyStorage({
                     type: 'localStorage',
                     key: id, // 保证之前不存在
-                    version: '1.0'
+                    tag: '1.0'
                 });
 
                 let value = {x:'x'};
-                ls.set(value);
+                ls.set(value).then(function () {
+                    // 版本不过期
+                    let ls2 = new NattyStorage({
+                        type: 'localStorage',
+                        key: id, // 保证之前存在
+                        tag: '1.0'
+                    });
 
-                // 版本不过期
-                let ls2 = new NattyStorage({
-                    type: 'localStorage',
-                    key: id // 保证之前存在
-                });
-
-                ls2.get().then(function (data) {
-                    try {
-                        expect(JSON.stringify(data)).to.be(JSON.stringify(value));
-                        ls.destroy();
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
+                    ls2.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be(JSON.stringify(value));
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
                 });
             });
 
@@ -271,7 +275,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                     ls3.get().then(function (data) {
                         try {
-                            expect(JSON.stringify(data)).to.be('{}');;
+                            expect(JSON.stringify(data)).to.be('{}');
                             ls.destroy();
                             done();
                         } catch (e) {
@@ -280,6 +284,55 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                     });
                 }, 300);
             });
+
+            it('valid until checking: invalid', function (done) {
+                let id = 'test-valid-until';
+                let ls = new NattyStorage({
+                    key: id,
+                    until: 1464246015932
+                });
+
+                ls.set('x', 'x').then(function () {
+                    let ls2 = new NattyStorage({
+                        key: id,
+                        until: 1464246015932
+                    });
+                    ls2.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be('{}');
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    })
+                });
+            });
+
+
+            it('valid until checking: valid', function (done) {
+                let id = 'test-valid-until';
+                let ls = new NattyStorage({
+                    key: id,
+                    until: Date.now() + 1000*60*60
+                });
+
+                ls.set('x', 'x').then(function () {
+                    let ls2 = new NattyStorage({
+                        key: id
+                    });
+                    ls2.get().then(function (data) {
+                        try {
+                            expect(JSON.stringify(data)).to.be('{"x":"x"}');
+                            ls.destroy();
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    })
+                });
+            });
+
         });
 
         describe('set/get', function() {
@@ -496,11 +549,6 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                     }
                 });
             });
-        });
-
-        describe('catch error', function () {
-
-
         });
     });
 });

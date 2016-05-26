@@ -1,7 +1,8 @@
 "use strict";
 
 const {extend, isPlainObject} = require('./util');
-const hasWindow = 'undefined' !== typeof window;
+const win = window;
+const hasWindow = 'undefined' !== typeof win;
 const NULL = null;
 const EMPTY = '';
 const TRUE = true;
@@ -11,131 +12,37 @@ const PLACEHOLDER = '_placeholder';
 let VERSION;
 __BUILD_VERSION__
 
-function createStorage(storage) {
-    storage = window[storage];
-    return {
-        // NOTE  值为undefined的情况, JSON.stringify方法会将键删除
-        // JSON.stringify({x:undefined}) === "{}"
-        set: function (key, value) {
-            // TODO 看看safari是否还有bug
-            // storage.removeItem(key);
-            storage.setItem(key, JSON.stringify(value));
-        },
-        get: function (key) {
-            var value = storage.getItem(key);
-            // alert(localStorage[key]);
-            if (!value) return null;
-            try {
-                value = JSON.parse(value);
-            } catch (e) {
-            }
-            return value;
-        },
-        remove: function (key) {
-            storage.removeItem(key);
-        }
-    }
-}
+let support = {
+    localStorage: hasWindow && !!win.localStorage && test('localStorage'),
+    sessionStorage: hasWindow && !!win.sessionStorage && test('sessionStorage')
+};
 
-function createVariable() {
-    let storage = {};
-    return {
-        set: function (key, value) {
-            storage[key] = value;
-        },
-        get: function (key) {
-
-        }
-    }
-}
-
-function reserveString (str) {
-    return str.split('').reverse().join('');
-}
-
-function splitPathToKeys (path) {
-    var ret;
-    if (path.indexOf('\\.') === -1) {
-        ret = path.split('.');
-    } else {
-        ret = reserveString(path).split(/\.(?!\\)/).reverse();
-        for (var i=0, l=ret.length; i<l; i++) {
-            ret[i] = reserveString(ret[i].replace(/\.\\/g, '.'));
-        }
-    }
-    return ret;
-}
-
-function setValueByPath(path, value, data) {
-    let keys = splitPathToKeys(path);
-    let bottomData = data;
-    while (keys.length) {
-        let key = keys.shift();
-        if (keys.length) {
-            bottomData[key] = bottomData[key] || {};
-            bottomData = bottomData[key];
-        } else {
-            if (isPlainObject(bottomData)) {
-                bottomData[key] = value;
-            } else {
-                throw new Error('Cannot create property `'+key+'` on non-object value, path:`'+path+'`');
-            }
-        }
-    }
-    return data;
-}
-
-function getValueByPath(path, data, isKey) {
-    isKey = isKey || false;
-    if (isKey === true || path.indexOf('.') === -1) {
-        return data[path];
-    } else {
-        let keys = splitPathToKeys(path);
-
-        while(keys.length) {
-            let key = keys.shift();
-            data = getValueByPath(key, data, true);
-
-            if (typeof data !== 'object' || data === undefined) {
-                if (keys.length) data = undefined;
-                break;
-            }
-        }
-        return data;
-    }
-}
-
-function removeKeyAndValueByPath(path, data) {
-    let keys = splitPathToKeys(path);
-    let bottomData = data;
-    while (keys.length) {
-        let key = keys.shift();
-        if (keys.length) {
-            bottomData[key] = bottomData[key] || {};
-            bottomData = bottomData[key];
-        } else {
-            delete bottomData[key];
-        }
-    }
-    return data;
+function test(type) {
+    let data = {'x':'x'};
+    let key = 'natty-storage-test';
+    let tester = createStorage(type);
+    tester.set(key, data);
+    let useable = JSON.stringify(tester.get(key)) === JSON.stringify(data);
+    tester.remove(key);
+    return useable;
 }
 
 // 全局默认配置
 const defaultGlobalConfig = {
-    // localStorage, sessionStorage
+    // localStorage, sessionStorage, variable
     type: 'localStorage',
 
     // 存到浏览器缓存中使用的键
     key: '',
 
     // 版本号
-    version: '',
+    tag: '',
 
     // 有效期长, 单位ms
     duration: 0,
 
     // 有效期至, 时间戳
-    validUntil: 0
+    until: 0
 };
 
 // 运行时的全局配置
@@ -146,7 +53,7 @@ let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
  *     type: 'localstorage', // sessionstorage, variable
  *       key: 'city',
  *       // 验证是否有效，如果是首次创建该LS，则不执行验证
- *       version: '1.0'
+ *       tag: '1.0'
  *  })
  */
 class NattyStorage {
@@ -163,7 +70,7 @@ class NattyStorage {
             throw new Error('`key` is missing, please check the options passed in `NattyStorage` constructor.');
         }
 
-        t._storage = createStorage(t.config.type);
+        t._storage = support[t.config.type] ? createStorage(t.config.type) : createVariable();
 
         t._CHECK_KEY = 'natty-storage-check-' + t.config.key;
         t._DATA_KEY = 'natty-storage-data-' + t.config.key;
@@ -184,7 +91,7 @@ class NattyStorage {
         t._checkData = t._storage.get(t._CHECK_KEY);
 
         // 当前`key`的`storage`是否已经存在
-        t._isNew = t._checkData === null;
+        t._isNew = t._checkData === NULL;
         // console.log('is new t._checkData', t._isNew);
 
         // 没有对应的本地缓存 或 本地缓存已过期 则 创建新的`storage`实例
@@ -197,17 +104,17 @@ class NattyStorage {
         else {
             // console.log('use cached t._checkData');
             t._data = t._storage.get(t._DATA_KEY);
-            if (t._data === null) {
+            if (t._data === NULL) {
                 t._storage.set(t._DATA_KEY, t._data = {});
             }
         }
 
         // 更新验证数据
         t._storage.set(t._CHECK_KEY, t._checkData = {
-            version:    t.config.version,
+            tag:    t.config.tag,
             lastUpdate: t._createStamp,
             duration:   t.config.duration,
-            validUntil: t.config.validUntil
+            until: t.config.until
         });
     }
 
@@ -217,7 +124,7 @@ class NattyStorage {
      */
     isOutdated() {
         let t = this;
-        if (t.config.version && t.config.version !== t._checkData.version) {
+        if (t.config.tag && t.config.tag !== t._checkData.tag) {
             return TRUE;
         }
 
@@ -227,6 +134,9 @@ class NattyStorage {
             return TRUE;
         }
 
+        if (t._checkData.until && now > t._checkData.until) {
+            return TRUE;
+        }
 
         // console.log('outdated: false');
         return FALSE;
@@ -319,6 +229,7 @@ class NattyStorage {
                     removeKeyAndValueByPath(path, t._data);
                     t._storage.set(t._DATA_KEY, t._data);
                 } else {
+                    // 删除所有数据, 复原到初始空对象
                     t.set({});
                 }
                 resolve();
@@ -336,11 +247,19 @@ class NattyStorage {
         t._storage.remove(t._CHECK_KEY);
         t._storage.remove(t._DATA_KEY);
     }
+
+    dump() {
+        if (JSON && console) {
+            console.log(JSON.stringify(this._data, NULL, 4));
+        }
+    }
 }
 
 NattyStorage.version = VERSION;
-NattyStorage.supportLocalStorage = hasWindow ? !!window.localStorage : FALSE;
-NattyStorage.supportSessionStorage = hasWindow ? !!window.sessionStorage : FALSE;
+// TODO 加入隐身模式判断
+NattyStorage.supportLocalStorage = support.localStorage;
+NattyStorage.supportSessionStorage = support.sessionStorage;
+NattyStorage._variable = {};
 
 /**
  * 执行全局配置
@@ -358,6 +277,124 @@ NattyStorage.setGlobal = (options) => {
  */
 NattyStorage.getGlobal = (property) => {
     return property ? runtimeGlobalConfig[property] : runtimeGlobalConfig;
+}
+
+
+function createStorage(storage) {
+    // TODO 降级到variable模式
+    storage = win[storage]
+    return {
+        // NOTE  值为undefined的情况, JSON.stringify方法会将键删除
+        // JSON.stringify({x:undefined}) === "{}"
+        set: function (key, value) {
+            // TODO 看看safari是否还有bug
+            // storage.removeItem(key);
+            storage.setItem(key, JSON.stringify(value));
+        },
+        get: function (key) {
+            var value = storage.getItem(key);
+            // alert(localStorage[key]);
+            if (!value) return NULL;
+            try {
+                value = JSON.parse(value);
+            } catch (e) {
+            }
+            return value;
+        },
+        remove: function (key) {
+            storage.removeItem(key);
+        }
+    }
+}
+
+function createVariable() {
+    let storage = NattyStorage._variable;
+    return {
+        set: function (key, value) {
+            storage[key] = value;
+        },
+        get: function (key) {
+            // 当对应的键不存在时, 返回值保持和`storage`一致。
+            if (!(key in storage)) {
+                return NULL;
+            }
+            return storage[key]
+        },
+        remove: function (key) {
+            delete storage[key];
+        }
+    }
+}
+
+function reserveString (str) {
+    return str.split('').reverse().join('');
+}
+
+function splitPathToKeys (path) {
+    var ret;
+    if (path.indexOf('\\.') === -1) {
+        ret = path.split('.');
+    } else {
+        ret = reserveString(path).split(/\.(?!\\)/).reverse();
+        for (var i=0, l=ret.length; i<l; i++) {
+            ret[i] = reserveString(ret[i].replace(/\.\\/g, '.'));
+        }
+    }
+    return ret;
+}
+
+function setValueByPath(path, value, data) {
+    let keys = splitPathToKeys(path);
+    let bottomData = data;
+    while (keys.length) {
+        let key = keys.shift();
+        if (keys.length) {
+            bottomData[key] = bottomData[key] || {};
+            bottomData = bottomData[key];
+        } else {
+            if (isPlainObject(bottomData)) {
+                bottomData[key] = value;
+            } else {
+                throw new Error('Cannot create property `'+key+'` on non-object value, path:`'+path+'`');
+            }
+        }
+    }
+    return data;
+}
+
+function getValueByPath(path, data, isKey) {
+    isKey = isKey || false;
+    if (isKey === true || path.indexOf('.') === -1) {
+        return data[path];
+    } else {
+        let keys = splitPathToKeys(path);
+
+        while(keys.length) {
+            let key = keys.shift();
+            data = getValueByPath(key, data, true);
+
+            if (typeof data !== 'object' || data === undefined) {
+                if (keys.length) data = undefined;
+                break;
+            }
+        }
+        return data;
+    }
+}
+
+function removeKeyAndValueByPath(path, data) {
+    let keys = splitPathToKeys(path);
+    let bottomData = data;
+    while (keys.length) {
+        let key = keys.shift();
+        if (keys.length) {
+            bottomData[key] = bottomData[key] || {};
+            bottomData = bottomData[key];
+        } else {
+            delete bottomData[key];
+        }
+    }
+    return data;
 }
 
 module.exports = NattyStorage;

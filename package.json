@@ -1,6 +1,6 @@
 {
   "name": "natty-storage",
-  "version": "1.0.0-alpha-1",
+  "version": "1.0.0-rc1",
   "description": "",
   "repository": "https://github.com/Jias/natty-storage.git",
   "author": "gnosaij",
@@ -14,9 +14,10 @@
   ],
   "keywords": [
     "natty-storage",
+    "localStorage",
+    "sessionStorage",
     "data",
     "database",
-    "db",
     "promise-api"
   ],
   "devDependencies": {

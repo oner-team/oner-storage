@@ -2,7 +2,8 @@
 
 storage plus for javascript
 
-> 开发者的体验至关重要，请加星(★Star)支持`Natty`系列的`js`工具库，必有收获！
+> 开发者的体验至关重要！  
+> `Natty`系列的小工具，以垂直的思路和工匠的精神，在微小的技术点上追求极致的精美，专注于提升前端同学的开发体验。如果对你有帮助，考虑支持一下吧 :D
 
 ## 特点
 
@@ -10,11 +11,11 @@ storage plus for javascript
 * 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生对象，大大减少了代码量。
 * 封装了三种有效性(`validity`)判断，标记(`tag`)、有效期长(`duration`)、有效期至(`validUntil`)，不再重复编码。
 * 隐身模式下，有些浏览器不支持`localStorage`，此时自动降级为`variable`模式。
-* TODO: `gzip`后的大小？
+* `gzip`后的只有`2.3K`。
 
 > TODO：这里的每一个特点都加上demo说明。
 
-## 创建缓存实例
+## 创建缓存对象
 
 创建缓存对象的实例
 
@@ -79,6 +80,8 @@ ls.set('fo\\.o.bar', 'x').then().catch();
 
 ## 获取数据
 
+获取数据支持获取全部数据和以路径方式获取部分数据。
+
 ```js
 // 获取完整数据
 ls.get().then(function(data){
@@ -96,6 +99,30 @@ ls.get('foo.bar').then().catch();
 // 如果路径中的某个键包含`.`号, 转义即可
 ls.get('fo\\.o.bar').then().catch();
 ```
+
+## 判断数据是否存在
+
+```js
+// 根据指定的路径，判断数据是否存在
+ls.has('x.y').then(function(result){
+	// 存在
+	// {
+	//    has: true,
+	//    value: 'value'
+	// }
+	//
+	// 不存在
+	// {
+	//    has: false,
+	//    value: undefined
+	// }
+}).catch();
+
+// 不指定路径，判断是否设置过全量的值
+// 如果没有设置过全量的值，又没有指定查找路径，则报错
+ls.has().then().catch();
+```
+
 
 ## 删除数据
 
@@ -117,7 +144,7 @@ ls.remove().then().catch();
 ls.destory();
 ```
 
-## 依赖
+## 外部依赖
 
 `NattyStorage`依赖现代浏览器的两个对象。在非现代浏览器下，可以通过引入`polyfill`解决。
 

@@ -19,7 +19,7 @@ let _describe = function () {};
 let VERSION;
 __BUILD_VERSION__
 
-describe('NattyStorage v' + VERSION + ' Unit Test', function() {
+describe('v' + VERSION + ' Unit Test', function() {
 
     describe('static',function() {
         it('version v' + VERSION, function() {

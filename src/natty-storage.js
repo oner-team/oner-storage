@@ -214,6 +214,38 @@ class NattyStorage {
         });
     }
 
+    has(path) {
+        let t = this;
+        return new Promise(function (resolve, reject) {
+            try {
+                let has;
+                if (!t._data) {
+                    t._lazyInit();
+                }
+                if (!t._placeholderUsed) {
+                    if (!path) {
+                        throw new Error('a `path` argument should be passed into the `has` method');
+                    }
+                    has = hasValueByPath(path, t._data);
+                } else {
+                    has = t._data.hasOwnProperty(PLACEHOLDER);
+                }
+                
+                let data = {
+                    has: has
+                };
+
+                if (has) {
+                    data.value = getValueByPath(path, t._data);
+                }
+                
+                resolve(data);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
     /**
      * 删除指定的路径的数据, 包括键本身
      * @param path {String} optional 要获取的值的路径 如果不传 则返回整体值
@@ -381,6 +413,47 @@ function getValueByPath(path, data, isKey) {
         return data;
     }
 }
+
+function hasValueByPath(path, data, isKey) {
+    // 首次调用, 如果没有`.`, 就是key的含义
+    isKey = isKey || path.indexOf('.') === -1;
+    if (isKey) {
+        return data.hasOwnProperty(path);
+    } else {
+        let keys = splitPathToKeys(path);
+        while(keys.length) {
+            let key = keys.shift();
+            // console.log('check key: ', key);
+            let hasKey = data.hasOwnProperty(key);
+            if (hasKey && keys.length) {
+                data = getValueByPath(key, data, true);
+                if (!isPlainObject(data)) {
+                    return FALSE;
+                }
+            } else {
+                return hasKey;
+            }
+        }
+    }
+}
+
+// TODO 移到单测里
+// let aa = {
+//     bb: {
+//         cc: {}
+//     },
+//     dd: 'dd',
+//     ee: {
+//         cc: 0
+//     }
+// }
+//
+// console.log('has key: bb.cc', hasValueByPath('bb.cc', aa));
+// console.log('has key: bb.dd', hasValueByPath('bb.dd', aa));
+// console.log('has key: dd.cc', hasValueByPath('dd.cc', aa));
+// console.log('has key: dd.length', hasValueByPath('dd.length', aa));
+// console.log('has key: ee.cc', hasValueByPath('ee.cc', aa));
+// console.log('has key: ee.dd', hasValueByPath('ee.dd', aa));
 
 function removeKeyAndValueByPath(path, data) {
     let keys = splitPathToKeys(path);

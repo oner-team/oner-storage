@@ -19,7 +19,7 @@ let _describe = function () {};
 let VERSION;
 __BUILD_VERSION__
 
-describe('v' + VERSION + ' Unit Test', function() {
+describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
     describe('static',function() {
         it('version v' + VERSION, function() {
@@ -29,8 +29,12 @@ describe('v' + VERSION + ' Unit Test', function() {
 
     describe('environment',function() {
         this.timeout(1000*60*5);
-        it.skip('support localStorage: ' + NattyStorage.supportLocalStorage);
-        it.skip('support sessionStorage: ' + NattyStorage.supportSessionStorage);
+        it.skip('support localStorage: ' + NattyStorage.support.localStorage);
+        it.skip('support sessionStorage: ' + NattyStorage.support.sessionStorage);
+        it('support', function () {
+            expect(NattyStorage.support.localStorage).to.be.a('boolean');
+            expect(NattyStorage.support.sessionStorage).to.be.a('boolean');
+        });
 
         let checkMax = function (type, cb) {
             let ls = new NattyStorage({
@@ -473,6 +477,137 @@ describe('v' + VERSION + ' Unit Test', function() {
                 });
             });
 
+        });
+
+
+        describe('has', function () {
+            let ls;
+
+            beforeEach('reset', function () {
+                ls = new NattyStorage({
+                    type: 'localStorage',
+                    key: 'foo'
+                });
+            });
+
+            afterEach('clear', function () {
+                ls.destroy();
+            });
+
+            it('has value with inner placeholder used', function (done) {
+                ls.set('x').then(function () {
+                    ls.has().then(function (result) {
+                        try {
+                            expect(result.value).to.be('x');
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }).catch(function (e) {
+                        done(e)
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
+
+            it('has no value with inner placeholder used', function (done) {
+                ls.has().then(function (result) {
+                    try {
+                        expect(result.hasOwnProperty('value')).to.be(false);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                }).catch(function (e) {
+                    done(e)
+                });
+            });
+
+            it('has value without inner placeholder used', function (done) {
+                ls.set('x', 'x').then(function () {
+                    ls.has().then(function (result) {
+                        // 走不到这里
+                    }).catch(function (e) {
+                        try {
+                            expect(e instanceof Error).to.be(true);
+                            done();
+                        } catch (e2) {
+                            done(e2)
+                        }
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
+
+            it('has value by `path` without inner placeholder used', function (done) {
+                ls.set('x', 'x').then(function () {
+                    ls.has('x').then(function (result) {
+                        try {
+                            expect(result.value).to.be('x');
+                            done();
+                        } catch (e) {
+                            done(e)
+                        }
+                    }).catch(function (e) {
+                        done(e)
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
+
+            it('has no value by `path` without inner placeholder used', function (done) {
+                ls.set('x', 'x').then(function () {
+                    ls.has('y').then(function (result) {
+                        try {
+                            expect(result.hasOwnProperty('value')).to.be(false);
+                            done();
+                        } catch (e) {
+                            done(e)
+                        }
+                    }).catch(function (e) {
+                        done(e)
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
+
+            it('has value by `deep path` without inner placeholder used', function (done) {
+                ls.set('x.y', 'y').then(function () {
+                    ls.has('x').then(function (result) {
+                        try {
+                            expect(result.value.y).to.be('y');
+                            done();
+                        } catch (e) {
+                            done(e)
+                        }
+                    }).catch(function (e) {
+                        done(e)
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
+
+            it('has no value by `deep path` without inner placeholder used', function (done) {
+                ls.set('x.y', 'y').then(function () {
+                    ls.has('x.y.z').then(function (result) {
+                        try {
+                            expect(result.hasOwnProperty('value')).to.be(false);
+                            done();
+                        } catch (e) {
+                            done(e)
+                        }
+                    }).catch(function (e) {
+                        done(e)
+                    });
+                }).catch(function (e) {
+                    done(e)
+                })
+            });
         });
 
         describe('remove', function () {

@@ -167,6 +167,7 @@ gulp.task('reload-by-test', ['test-pack'], function () {
 // 启动监听
 gulp.task('watch', ['pack', 'test-pack'], function () {
     browserSync({
+        // port: 8008,
         server: {
             baseDir: './'
         },

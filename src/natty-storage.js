@@ -28,15 +28,15 @@ function test(type) {
 }
 
 // 全局默认配置
-const defaultGlobalConfig = {
+let defaultGlobalConfig = {
     // localStorage, sessionStorage, variable
     type: 'localStorage',
 
     // 存到浏览器缓存中使用的键
-    key: '',
+    key: EMPTY,
 
     // 版本号
-    tag: '',
+    tag: EMPTY,
 
     // 有效期长, 单位ms
     duration: 0,
@@ -72,8 +72,8 @@ class NattyStorage {
 
         t._storage = support[t.config.type] ? createStorage(t.config.type) : createVariable();
 
-        t._CHECK_KEY = 'natty-storage-check-' + t.config.key;
-        t._DATA_KEY = 'natty-storage-data-' + t.config.key;
+        t._CHECK_KEY = 'NattyStorageCheck:' + t.config.key;
+        t._DATA_KEY = 'NattyStorageData:' + t.config.key;
         t._placeholderUsed = FALSE;
 
         // 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
@@ -214,32 +214,37 @@ class NattyStorage {
         });
     }
 
+    /**
+     * 返回指定的路径是否有值
+     * @param path {String} optional 要查询的路径
+     * @returns {Promise}
+     */
     has(path) {
         let t = this;
         return new Promise(function (resolve, reject) {
             try {
                 let has;
+
                 if (!t._data) {
                     t._lazyInit();
                 }
-                if (!t._placeholderUsed) {
+
+                // 如果有数据 且 没有使用内置`placeholder`, 说明是使用`path`方式设置的值
+                if (!t._placeholderUsed && !isEmptyPlainObject(t._data)) {
                     if (!path) {
                         throw new Error('a `path` argument should be passed into the `has` method');
                     }
-                    has = hasValueByPath(path, t._data);
-                } else {
-                    has = t._data.hasOwnProperty(PLACEHOLDER);
-                }
-                
-                let data = {
-                    has: has
-                };
 
-                if (has) {
-                    data.value = getValueByPath(path, t._data);
+                    resolve(hasValueByPath(path, t._data) ? {
+                        has: true,
+                        value: getValueByPath(path, t._data)
+                    }: {});
+                } else {
+                    resolve(t._data.hasOwnProperty(PLACEHOLDER) ? {
+                        has: true,
+                        value: t._data[PLACEHOLDER]
+                    } : {});
                 }
-                
-                resolve(data);
             } catch (e) {
                 reject(e);
             }
@@ -288,9 +293,9 @@ class NattyStorage {
 }
 
 NattyStorage.version = VERSION;
-// TODO 加入隐身模式判断
-NattyStorage.supportLocalStorage = support.localStorage;
-NattyStorage.supportSessionStorage = support.sessionStorage;
+NattyStorage.support = {};
+NattyStorage.support.localStorage = support.localStorage;
+NattyStorage.support.sessionStorage = support.sessionStorage;
 NattyStorage._variable = {};
 
 /**
@@ -359,7 +364,7 @@ function createVariable() {
 }
 
 function reserveString (str) {
-    return str.split('').reverse().join('');
+    return str.split(EMPTY).reverse().join(EMPTY);
 }
 
 function splitPathToKeys (path) {
@@ -437,24 +442,6 @@ function hasValueByPath(path, data, isKey) {
     }
 }
 
-// TODO 移到单测里
-// let aa = {
-//     bb: {
-//         cc: {}
-//     },
-//     dd: 'dd',
-//     ee: {
-//         cc: 0
-//     }
-// }
-//
-// console.log('has key: bb.cc', hasValueByPath('bb.cc', aa));
-// console.log('has key: bb.dd', hasValueByPath('bb.dd', aa));
-// console.log('has key: dd.cc', hasValueByPath('dd.cc', aa));
-// console.log('has key: dd.length', hasValueByPath('dd.length', aa));
-// console.log('has key: ee.cc', hasValueByPath('ee.cc', aa));
-// console.log('has key: ee.dd', hasValueByPath('ee.dd', aa));
-
 function removeKeyAndValueByPath(path, data) {
     let keys = splitPathToKeys(path);
     let bottomData = data;
@@ -468,6 +455,15 @@ function removeKeyAndValueByPath(path, data) {
         }
     }
     return data;
+}
+
+function isEmptyPlainObject(v) {
+    let ret = TRUE;
+    for (let i in v) {
+        ret = FALSE;
+        break;
+    }
+    return ret;
 }
 
 module.exports = NattyStorage;

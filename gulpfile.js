@@ -65,44 +65,44 @@ function pack(isFallback) {
 }
 
 // pack natty-db.node.js
-function packNodeVersion(isPc) {
-    var indexFile = isPc ? 'src/index.pc.js' : 'src/index.js';
-
-    return gulp.src(indexFile).pipe(webpackStream({
-        output: {
-            // 不要配置path，会报错
-            //path: 'dist',
-            filename: isPc ? 'natty-db.pc.node.js' : 'natty-db.node.js',
-            sourcePrefix: '',
-            libraryTarget: 'commonjs'
-        },
-        // 这个配置要和 output.sourceMapFilename 一起使用
-        module: {
-            loaders: [
-                {
-                    test: /\.js$/,
-                    exclude: /node_modules/,
-                    loader: 'babel-loader?stage=1'
-                }
-            ]
-        },
-        externals:  {},
-        plugins: [
-            new webpack.DefinePlugin({
-                __BUILD_VERSION__: 'VERSION = "' + pkg.version + '"',
-                __BUILD_FALLBACK__: isPc
-            }),
-        ]
-    })).pipe(gulp.dest('./dist'));
-}
+// function packNodeVersion(isPc) {
+//     var indexFile = isPc ? 'src/index.pc.js' : 'src/index.js';
+//
+//     return gulp.src(indexFile).pipe(webpackStream({
+//         output: {
+//             // 不要配置path，会报错
+//             //path: 'dist',
+//             filename: isPc ? 'natty-storage.pc.node.js' : 'natty-storage.node.js',
+//             sourcePrefix: '',
+//             libraryTarget: 'commonjs'
+//         },
+//         // 这个配置要和 output.sourceMapFilename 一起使用
+//         module: {
+//             loaders: [
+//                 {
+//                     test: /\.js$/,
+//                     exclude: /node_modules/,
+//                     loader: 'babel-loader?stage=1'
+//                 }
+//             ]
+//         },
+//         externals:  {},
+//         plugins: [
+//             new webpack.DefinePlugin({
+//                 __BUILD_VERSION__: 'VERSION = "' + pkg.version + '"',
+//                 __BUILD_FALLBACK__: isPc
+//             }),
+//         ]
+//     })).pipe(gulp.dest('./dist'));
+// }
 
 gulp.task('pack', function() {
     return pack(false);
 });
 
-gulp.task('pack-commonjs', ['pack'], function() {
-    packNodeVersion(false);
-});
+// gulp.task('pack-commonjs', ['pack'], function() {
+//     packNodeVersion(false);
+// });
 
 gulp.task('test-pack', ['del-test-dist'], function() {
     return gulp.src('./test-src/index.spec.js').pipe(webpackStream({

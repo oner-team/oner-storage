@@ -1,10 +1,10 @@
 {
   "name": "natty-storage",
-  "version": "1.0.0-rc3",
+  "version": "1.0.0-rc4",
   "description": "",
   "repository": "https://github.com/Jias/natty-storage.git",
   "author": "gnosaij",
-  "main": "dist/natty-storage.min.js",
+  "main": "dist/natty-storage.js",
   "files": [
     "dist",
     "src",
@@ -38,7 +38,7 @@
   },
   "scripts": {
     "dev": "gulp watch",
-    "build": "gulp pack-commonjs && gulp min"
+    "build": "gulp delete-dist-dir && gulp pack && gulp min"
   },
   "license": "MIT"
 }

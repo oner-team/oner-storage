@@ -39,7 +39,7 @@ function pack(isFallback) {
 
             // 下面三个配置项说明`webpack`的最佳实战是: 只设置唯一的`entry`, 正好和`gulp`的约定完美对接
             // NOTE: 如果需要构建`umd`模块，则这三个配置项必须同时使用：library, libraryTarget, umdNamedDefine
-            library: 'NattyStorage',
+            library: 'nattyStorage',
             libraryTarget: 'umd',
             umdNamedDefine: true
         },
@@ -128,7 +128,7 @@ gulp.task('test-pack', ['del-test-dist'], function() {
             ]
         },
         externals:  {
-            'natty-storage': 'var NattyStorage' // 相当于 modules.export = NattyStorage;
+            'natty-storage': 'var nattyStorage' // 相当于 modules.export = nattyStorage;
         },
         plugins: [
             new webpack.DefinePlugin({

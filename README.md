@@ -2,161 +2,186 @@
 
 storage plus for javascript
 
-> The experience for developers is crucial！
-> Widgets of `Natty` series, with vertical thinking and the spirit of the craftsman, concentrates on improving the user experiences of Web developers. if it does help you, please give a support. :D
+> 开发者的体验至关重要！  
+> `natty`系列的小工具，以垂直的思路和工匠的精神，在微小的技术点上追求极致的精美，专注于提升前端同学的开发体验。如果对你有帮助，考虑支持一下吧 :D
 
-## Characteristic
+## 特点
 
-* It uses `localStorage` and `sessionStorage` asynchronously(`Promise`) which is non-blocking, and it can decently catch exceptions (for instance, the biggest limitation of browsers is exceeded)。
-* It supports using path (`Path`) to set、retrieve and delete data, and it significantly reduces los of code compared with using native objects.
-* It encapsulates three estimation of validity(`validity`), including tags(`tag`)、long validity(`duration`)、validUntil(`validUntil`), to avoid redundant coding.
-* In the incognito mode, `localStorage` is not supported in some browsers, now it is automatically demoted to the `variable` mode.
-* After `gzip`, only `2.3K`.
+* 以异步(`Promise`)方式使用`localStorage`和`sessionStorage`，不再阻塞，并优雅地捕获异常(如超出浏览器最大限制)。
+* 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生对象，大大减少了代码量。
+* 封装了三种有效性(`validity`)判断，标记(`tag`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
+* 隐身模式下，有些浏览器不支持`localStorage`，此时自动降级为`variable`模式。
+* `gzip`后的只有`2.3K`。
 
-> TODO：demo added as further explaination for each characteristic
+> TODO：这里的每一个特点都加上demo说明。
 
-## Create the cache object
+## 创建缓存对象
 
-create the object cache instances
+创建缓存对象的实例
 
 ```js
-let ls = new NattyStorage({
-    type: 'localStorage',
-    key: 'foo',
-    tag: '1.0',
-    ...
+let storage = nattyStorage({
+    type: 'localStorage', // 缓存方式
+    key: 'ChinaCity',     // !!! 唯一必选的参数，用于内部存储
+    tag: 'v1.0',          // 缓存的标记，用于判断是否有效
+    duration: 1000*60*10, // 缓存的有效期长，以毫秒数指定
+    until: 1464759086797  // 缓存的到期时间，以具体日期时间的时间戳指定
 });
 ```
 
-#### `type`(optionally)：enumerations
+#### `type`(可选)：枚举值
 
-Specify how the cache object stores data. optional values are `localStorage`、`sessionStorage` and`variable`. The default value is `localStorage`。
+指定缓存对象存储数据的方式，可选值为`localStorage`、`sessionStorage`和`variable`。默认为`localStorage`。
 
-When the value of `type` is `localStorage` and the `localStorage` is not available (such as in incognito mode in some browsers)，it is automatically demoted to `variable` mode to store data.
+当指定`type`为`localStorage/sessionStorage`，但浏览器的`localStorage/sessionStorage`不可用时(比如部分浏览器的隐身模式下)，则自动降级到`varable`方式存储。
 
-#### `key`(required)：string
+#### `key`(必选)：字符串
 
-A unique identification of the cache object. If `key` of two cache objects are the same, then cached data also should be the same.
+指定缓存对象存储数据所使用的唯一标识。如果两个缓存对象的`key`值相同，则缓存的数据也是相同的。
 
-#### `tag`(optionally)：string
+#### `tag`(可选)：字符串
 
-Using tags to find out whether the stored data is valid or invalid。If the tags are differnt, the cache is invalidated.
+通过一个标记来判断缓存对象所存储的数据是否有效。`tag`不同则缓存失效。
 
-> Used for caching the data which is not likely to change, such as city data.
+> 通常tag的值是一个字符串标识，比如版本号。
 
-#### `duration`(optionally)：timestamp
+#### `duration`(可选)：毫秒数
 
-Using "long validity" to find out whether the stored data is valid or invalid. The cache is invalidated when it expires, or it would be postpone to the expiry date。
+通过"有效期长"来判断缓存对象所存储的数据是否有效。过期则缓存失效，不过期则顺延。
 
-#### `until`(optionally)：timestamp
+#### `until`(可选)：时间戳
 
-Using "validUntil" to find out whether the stored data is valid or invalid. The cache is invalidated when it expires.
+通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
 
-## Set Data
 
-Setting data includes adding new data and modifying existing data .
+## 设置数据
+
+设置数据包括添加新数据和修改已有的数据，都很方便。
 
 ```js
-// set complete data
-ls.set({x:'x'}).then(function(){
+// 设置完整数据
+storage.set({x:'x'}).then(function(){
     // do something
 }).catch(function(e){
     // deal the error
 });
 
-// set any type of complete data
-ls.set('x').then().catch();
+// 设置任意类型的完整数据
+storage.set('x').then().catch();
 
-// set specified data
-ls.set('foo', 'x').then().catch();
+// 设置指定键的数据
+storage.set('foo', 'x').then().catch();
 
-// set the data for the specified path
-ls.set('foo.bar', 'x').then().catch();
+// 设置指定路径的数据
+storage.set('foo.bar', 'x').then().catch();
 
-// if there is `.` in the path , it needs to be escaped
-ls.set('fo\\.o.bar', 'x').then().catch();
+// 如果路径中的某个键包含`.`号, 转义即可
+storage.set('fo\\.o.bar', 'x').then().catch();
 ```
 
-## Get Data
+## 获取数据
 
-Getting complete data and getting some data by means of a path are supported
+获取数据支持获取全部数据和以路径方式获取部分数据。
 
 ```js
-// get complete data
-ls.get().then(function(data){
+// 获取完整数据
+storage.get().then(function(data){
     // do something with data
 }).catch(function(e){
     // deal the error
 });
 
-// get specified data
-ls.get('foo').then().catch();
+// 获取指定的键的数据
+storage.get('foo').then().catch();
 
-// get the data for the specified path
-ls.get('foo.bar').then().catch();
+// 获取指定的路径的数据
+storage.get('foo.bar').then().catch();
 
-// if there is `.` in the path , it needs to be escaped
-ls.get('fo\\.o.bar').then().catch();
+// 如果路径中的某个键包含`.`号, 转义即可
+storage.get('fo\\.o.bar').then().catch();
 ```
 
-##  Determine whether data exists.
+## 判断数据是否存在
 
 ```js
-// Based on the specified path, determine whether data exists
-ls.has('x.y').then(function(result){
-	// presence
+// 根据指定的路径，判断数据是否存在
+storage.has('x.y').then(function(result){
+	// 存在
 	// {
 	//    has: true,
 	//    value: 'value'
 	// }
 	//
-	// absent
+	// 不存在
 	// {
 	//    has: false,
 	//    value: undefined
 	// }
 }).catch();
 
-// If you don't specify a path, you need to determine whether the global value is set
-// If the global value is not set，and you don't specify a path, it will report an error
-ls.has().then().catch();
+// 不指定路径，判断是否设置过全量的值
+// 如果没有设置过全量的值，又没有指定查找路径，则报错
+storage.has().then().catch();
 ```
 
 
-## Delete Data
+## 删除数据
 
-when data is deleted, the key you specify and the corresponding value will be deleted.
+删除数据会同时删除指定的键和对应的值。
 
 ```js
-// delete the data and key values of the specified path
-ls.remove('x.y').then().catch();
+// 删除设置指定路径的数据和键
+storage.remove('x.y').then().catch();
 
-//  clean up the data
-ls.remove().then().catch();
+// 清空数据为{}
+storage.remove().then().catch();
 ```
 
-## Destroy instance
+## 销毁实例
 
-destroy the cache object instance
+销毁缓存对象实例
 
 ```js
-ls.destory();
+storage.destory();
 ```
 
-## External dependencies
+## 外部依赖
 
-`NattyStorage` is based on two objects of modern browsers. If it is not on modern browsers, it should be solved by introducing `polyfill`.
+`nattyStorage`依赖现代浏览器的两个对象。在非现代浏览器下，可以通过引入`polyfill`解决。
 
-* `Promise` object, recommended `polyfill`：[lie](https://github.com/calvinmetcalf/lie)
-* `JSON` object, recommended `polyfill`：[json2](https://github.com/douglascrockford/JSON-js)
+* `Promise`对象，推荐的`polyfill`：[lie](https://github.com/calvinmetcalf/lie)
+* `JSON`对象，推荐的`polyfill`：[json2](https://github.com/douglascrockford/JSON-js)
 
-## Develop
+## IE8和IE9的兼容性
 
-`clone` the code, and to be run in the root directory：
+如果需要兼容`IE8`和`IE9`，需要引入`es5-shim`和`es5-sham`。
+
+安装
+
+```shell
+npm install es5-shim --save
+```
+
+将下面的代码添加到`nattyStorage`标签之前
+
+```html
+<!--[if lt IE 10]>
+<script type="text/javascript" src="./node_modules/es5-shim/es5-shim.min.js"></script>
+<script type="text/javascript" src="./node_modules/es5-shim/es5-sham.min.js"></script>
+<![endif]-->
+```
+
+## 开发
+
+把代码`clone`到本地，在根目录下执行：
 
 ```shell
 npm install
 npm run dev
 ```
 
+## 构建
 
+```shell
+npm run build
+```

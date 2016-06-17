@@ -49,14 +49,14 @@ let defaultGlobalConfig = {
 let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
 
 /**
- *  let ls = new NattyStorage({
+ *  let ls = new nattyStorage({
  *     type: 'localstorage', // sessionstorage, variable
  *       key: 'city',
  *       // 验证是否有效，如果是首次创建该LS，则不执行验证
  *       tag: '1.0'
  *  })
  */
-class NattyStorage {
+class Storage {
     /**
      * 构造函数
      * @param options
@@ -66,14 +66,15 @@ class NattyStorage {
 
         t.config = extend({}, runtimeGlobalConfig, options);
 
+        // 必须配置`key`!!! 无论什么类型!!!
         if (!t.config.key) {
-            throw new Error('`key` is missing, please check the options passed in `NattyStorage` constructor.');
+            throw new Error('`key` is missing, please check the options passed in `nattyStorage` constructor.');
         }
 
         t._storage = support[t.config.type] ? createStorage(t.config.type) : createVariable();
 
-        t._CHECK_KEY = 'NattyStorageCheck:' + t.config.key;
-        t._DATA_KEY = 'NattyStorageData:' + t.config.key;
+        t._CHECK_KEY = 'nattyStorageCheck:' + t.config.key;
+        t._DATA_KEY = 'nattyStorageData:' + t.config.key;
         t._placeholderUsed = FALSE;
 
         // 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
@@ -292,17 +293,19 @@ class NattyStorage {
     }
 }
 
-NattyStorage.version = VERSION;
-NattyStorage.support = {};
-NattyStorage.support.localStorage = support.localStorage;
-NattyStorage.support.sessionStorage = support.sessionStorage;
-NattyStorage._variable = {};
+let nattyStorage = (options) => {
+    return new Storage(options);
+}
+
+nattyStorage.version = VERSION;
+nattyStorage._variable = variable;
+nattyStorage.support = support;
 
 /**
  * 执行全局配置
  * @param options
  */
-NattyStorage.setGlobal = (options) => {
+nattyStorage.setGlobal = (options) => {
     runtimeGlobalConfig = extend({}, defaultGlobalConfig, options);
     return this;
 }
@@ -312,13 +315,12 @@ NattyStorage.setGlobal = (options) => {
  * @param property {String} optional
  * @returns {*}
  */
-NattyStorage.getGlobal = (property) => {
+nattyStorage.getGlobal = (property) => {
     return property ? runtimeGlobalConfig[property] : runtimeGlobalConfig;
 }
 
 
 function createStorage(storage) {
-    // TODO 降级到variable模式
     storage = win[storage]
     return {
         // NOTE  值为undefined的情况, JSON.stringify方法会将键删除
@@ -329,7 +331,7 @@ function createStorage(storage) {
             storage.setItem(key, JSON.stringify(value));
         },
         get: function (key) {
-            var value = storage.getItem(key);
+            let value = storage.getItem(key);
             // alert(localStorage[key]);
             if (!value) return NULL;
             try {
@@ -344,8 +346,9 @@ function createStorage(storage) {
     }
 }
 
+let variable = {};
 function createVariable() {
-    let storage = NattyStorage._variable;
+    let storage = variable;
     return {
         set: function (key, value) {
             storage[key] = value;
@@ -466,4 +469,4 @@ function isEmptyPlainObject(v) {
     return ret;
 }
 
-module.exports = NattyStorage;
+module.exports = nattyStorage;

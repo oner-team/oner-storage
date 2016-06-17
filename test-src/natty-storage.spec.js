@@ -4,7 +4,7 @@
 const expect = require('expect.js');
 
 // require('natty-storage')已被`webpack`映射到全局`NattyDB`对象
-const NattyStorage = require('natty-storage');
+const nattyStorage = require('natty-storage');
 
 const s1MB = require('./1m');
 const s1KB = require('./1k');
@@ -19,25 +19,25 @@ let _describe = function () {};
 let VERSION;
 __BUILD_VERSION__
 
-describe('NattyStorage v' + VERSION + ' Unit Test', function() {
+describe('nattyStorage v' + VERSION + ' Unit Test', function() {
 
     describe('static',function() {
         it('version v' + VERSION, function() {
-            expect(NattyStorage.version).to.equal(VERSION);
+            expect(nattyStorage.version).to.equal(VERSION);
         });
     });
 
     describe('environment',function() {
         this.timeout(1000*60*5);
-        it.skip('support localStorage: ' + NattyStorage.support.localStorage);
-        it.skip('support sessionStorage: ' + NattyStorage.support.sessionStorage);
+        it.skip('support localStorage: ' + nattyStorage.support.localStorage);
+        it.skip('support sessionStorage: ' + nattyStorage.support.sessionStorage);
         it('support', function () {
-            expect(NattyStorage.support.localStorage).to.be.a('boolean');
-            expect(NattyStorage.support.sessionStorage).to.be.a('boolean');
+            expect(nattyStorage.support.localStorage).to.be.a('boolean');
+            expect(nattyStorage.support.sessionStorage).to.be.a('boolean');
         });
 
         let checkMax = function (type, cb) {
-            let ls = new NattyStorage({
+            let ls = nattyStorage({
                 type: type,
                 key: 'big'
             });
@@ -113,18 +113,20 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
     });
 
     describe('localStorage', function() {
+        this.timeout(1000*10);
 
         describe('initialize', function () {
             it('as soon as possiable with lazy init', function (done) {
                 let bigData = s1MB + s1MB;
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     key: 'big-data'
                 });
                 ls.set('x',bigData).then(function () {
                     try {
                         // 统计ls2的创建时间
                         let startTime = +new Date();
-                        let ls2 = new NattyStorage({
+
+                        let ls2 = nattyStorage({
                             key: 'big-data'
                         });
                         let endTime = +new Date();
@@ -144,13 +146,13 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('create storage instance with existed data', function(done){
                 let id = getId();
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     type: 'localStorage',
                     key: id // 保证之前不存在
                 });
 
                 ls.set('x', 'x').then(function () {
-                    let ls2 = new NattyStorage({
+                    let ls2 = nattyStorage({
                         type: 'localStorage',
                         key: id // 保证之前存在
                     });
@@ -172,7 +174,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('tag checking: invalid', function(done){
                 let id = getId();
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     type: 'localStorage',
                     key: id, // 保证之前不存在
                     tag: '1.0'
@@ -180,7 +182,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                 ls.set('x', 'x').then(function () {
                     // 版本过期
-                    let ls2 = new NattyStorage({
+                    let ls2 = nattyStorage({
                         type: 'localStorage',
                         key: id, // 保证之前存在
                         tag: '2.0'
@@ -201,7 +203,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('tag checking: valid', function(done) {
                 let id = getId();
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     type: 'localStorage',
                     key: id, // 保证之前不存在
                     tag: '1.0'
@@ -210,7 +212,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
                 let value = {x:'x'};
                 ls.set(value).then(function () {
                     // 版本不过期
-                    let ls2 = new NattyStorage({
+                    let ls2 = nattyStorage({
                         type: 'localStorage',
                         key: id, // 保证之前存在
                         tag: '1.0'
@@ -230,7 +232,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('check `lastUpdate` is updated when an new storage was initialized', function (done) {
                 let id = 'test-last-update';
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     type: 'localStorage',
                     key: id,
                     duration: 200
@@ -241,7 +243,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                     // 未过期的情况下, 创建新的`storage`时, 会顺延有效期
                     setTimeout(function () {
-                        let ls2 = new NattyStorage({
+                        let ls2 = nattyStorage({
                             type: 'localStorage',
                             key: id,
                             duration: 300
@@ -262,7 +264,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('create storage with expire checking', function (done) {
                 let id = 'test-expire';
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     type: 'localStorage',
                     key: id,
                     duration: 200
@@ -271,7 +273,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
                 // 过期
                 setTimeout(function () {
-                    let ls3 = new NattyStorage({
+                    let ls3 = nattyStorage({
                         type: 'localStorage',
                         key: id,
                         duration: 300
@@ -291,13 +293,13 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('valid until checking: invalid', function (done) {
                 let id = 'test-valid-until';
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     key: id,
                     until: 1464246015932
                 });
 
                 ls.set('x', 'x').then(function () {
-                    let ls2 = new NattyStorage({
+                    let ls2 = nattyStorage({
                         key: id,
                         until: 1464246015932
                     });
@@ -316,13 +318,13 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
 
             it('valid until checking: valid', function (done) {
                 let id = 'test-valid-until';
-                let ls = new NattyStorage({
+                let ls = nattyStorage({
                     key: id,
                     until: Date.now() + 1000*60*60
                 });
 
                 ls.set('x', 'x').then(function () {
-                    let ls2 = new NattyStorage({
+                    let ls2 = nattyStorage({
                         key: id
                     });
                     ls2.get().then(function (data) {
@@ -344,7 +346,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
             let ls;
 
             beforeEach('reset', function () {
-                ls = new NattyStorage({
+                ls = nattyStorage({
                     type: 'localStorage',
                     key: 'foo'
                 });
@@ -484,7 +486,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
             let ls;
 
             beforeEach('reset', function () {
-                ls = new NattyStorage({
+                ls = nattyStorage({
                     type: 'localStorage',
                     key: 'foo'
                 });
@@ -623,7 +625,7 @@ describe('NattyStorage v' + VERSION + ' Unit Test', function() {
             };
 
             beforeEach('reset', function () {
-                ls = new NattyStorage({
+                ls = nattyStorage({
                     type: 'localStorage',
                     key: 'foo'
                 });

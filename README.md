@@ -142,7 +142,7 @@ storage.remove().then().catch();
 销毁缓存对象实例
 
 ```js
-storage.destory();
+storage.destroy();
 ```
 
 ## 外部依赖

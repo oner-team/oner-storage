@@ -15,6 +15,12 @@ storage plus for javascript
 
 > TODO：这里的每一个特点都加上demo说明。
 
+## 安装
+
+```shell
+npm install natty-storage --save
+```
+
 ## nattyStorage(options)
 
 创建缓存对象的实例

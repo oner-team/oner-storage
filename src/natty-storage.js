@@ -1,6 +1,6 @@
 "use strict";
 
-const {extend, isPlainObject} = require('./util');
+const {extend, isPlainObject, noop} = require('./util');
 const win = window;
 const hasWindow = 'undefined' !== typeof win;
 const NULL = null;
@@ -42,7 +42,10 @@ let defaultGlobalConfig = {
     duration: 0,
 
     // 有效期至, 时间戳
-    until: 0
+    until: 0,
+
+    // 是否以异步方式使用set/get/has/remove
+    async: false
 };
 
 // 运行时的全局配置
@@ -53,7 +56,7 @@ let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
  *     type: 'localstorage', // sessionstorage, variable
  *       key: 'city',
  *       // 验证是否有效，如果是首次创建该LS，则不执行验证
- *       tag: '1.0'
+ *       id: '1.0'
  *  })
  */
 class Storage {
@@ -112,7 +115,7 @@ class Storage {
 
         // 更新验证数据
         t._storage.set(t._CHECK_KEY, t._checkData = {
-            tag:    t.config.tag,
+            id:    t.config.id,
             lastUpdate: t._createStamp,
             duration:   t.config.duration,
             until: t.config.until
@@ -125,7 +128,7 @@ class Storage {
      */
     isOutdated() {
         let t = this;
-        if (t.config.tag && t.config.tag !== t._checkData.tag) {
+        if (t.config.id && t.config.id !== t._checkData.id) {
             return TRUE;
         }
 
@@ -157,9 +160,8 @@ class Storage {
 
         let t = this;
         let argumentLength = arguments.length;
-
-        // 同步到storage
-        return new Promise(function(resolve, reject) {
+        
+        let todo = (resolve, reject) => {
             try {
                 if (!t._data) {
                     t._lazyInit();
@@ -180,7 +182,13 @@ class Storage {
             } catch (e) {
                 reject(e);
             }
-        });
+        }
+
+        if (t.config.async) {
+            return new Promise(todo);
+        } else {
+            todo(noop, throwError);
+        }
     }
 
     /**
@@ -194,9 +202,9 @@ class Storage {
      */
     get(path) {
         let t = this;
-        return new Promise(function (resolve, reject) {
+        let data;
+        let todo = function (resolve, reject) {
             try {
-                let data;
                 if (!t._data) {
                     t._lazyInit();
                 }
@@ -212,7 +220,14 @@ class Storage {
             } catch (e) {
                 reject(e);
             }
-        });
+        }
+
+        if (t.config.async) {
+            return new Promise(todo);
+        } else {
+            todo(noop, throwError);
+            return data;
+        }
     }
 
     /**
@@ -222,10 +237,9 @@ class Storage {
      */
     has(path) {
         let t = this;
-        return new Promise(function (resolve, reject) {
+        let result;
+        let todo = function (resolve, reject) {
             try {
-                let has;
-
                 if (!t._data) {
                     t._lazyInit();
                 }
@@ -236,20 +250,30 @@ class Storage {
                         throw new Error('a `path` argument should be passed into the `has` method');
                     }
 
-                    resolve(hasValueByPath(path, t._data) ? {
+                    result = hasValueByPath(path, t._data) ? {
                         has: true,
                         value: getValueByPath(path, t._data)
-                    }: {});
+                    }: {}
+
+                    resolve(result);
                 } else {
-                    resolve(t._data.hasOwnProperty(PLACEHOLDER) ? {
+                    result = t._data.hasOwnProperty(PLACEHOLDER) ? {
                         has: true,
                         value: t._data[PLACEHOLDER]
-                    } : {});
+                    } : {}
+                    resolve(result);
                 }
             } catch (e) {
                 reject(e);
             }
-        });
+        }
+
+        if (t.config.async) {
+            return new Promise(todo);
+        } else {
+            todo(noop, throwError);
+            return result;
+        }
     }
 
     /**
@@ -258,7 +282,7 @@ class Storage {
      */
     remove(path) {
         let t = this;
-        return new Promise(function (resolve, reject) {
+        let todo = function (resolve, reject) {
             try {
                 if (!t._data) {
                     t._lazyInit();
@@ -274,7 +298,13 @@ class Storage {
             } catch (e) {
                 reject(e);
             }
-        });
+        }
+
+        if (t.config.async) {
+            return new Promise(todo);
+        } else {
+            todo(noop, throwError);
+        }
     }
 
     /**
@@ -301,6 +331,8 @@ nattyStorage.version = VERSION;
 nattyStorage._variable = variable;
 nattyStorage.support = support;
 
+
+
 /**
  * 执行全局配置
  * @param options
@@ -319,6 +351,9 @@ nattyStorage.getGlobal = (property) => {
     return property ? runtimeGlobalConfig[property] : runtimeGlobalConfig;
 }
 
+function throwError(e) {
+    throw new Error(e);
+}
 
 function createStorage(storage) {
     storage = win[storage]

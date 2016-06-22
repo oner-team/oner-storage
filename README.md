@@ -7,27 +7,67 @@ storage plus for javascript
 
 ## 特点
 
-* 以异步(`Promise`)方式使用`localStorage`和`sessionStorage`，不再阻塞，并优雅地捕获异常(如超出浏览器最大限制)。
-* 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生对象，大大减少了代码量。
-* 封装了三种有效性(`validity`)判断，标记(`tag`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
+* 支持异步方式使用`localStorage`和`sessionStorage`，避免阻塞，并优雅地捕获异常(如超出浏览器最大限制)。当然，同步方式使用依然是默认的使用方式。
+* 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生`localStorage/sessionStorage`对象，大大减少了代码量。
+* 封装了三种有效性判断，标记(`id`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
 * 隐身模式下，有些浏览器不支持`localStorage`，此时自动降级为`variable`模式。
 * `gzip`后的只有`2.3K`。
 
 > TODO：这里的每一个特点都加上demo说明。
 
-## 创建缓存对象
+## nattyStorage(options)
 
 创建缓存对象的实例
 
 ```js
 let storage = nattyStorage({
+    async: true,          // 是否以异步方式使用
     type: 'localStorage', // 缓存方式
     key: 'ChinaCity',     // !!! 唯一必选的参数，用于内部存储
-    tag: 'v1.0',          // 缓存的标记，用于判断是否有效
+    id: 'v1.0',           // 缓存的标记，用于判断是否有效
     duration: 1000*60*10, // 缓存的有效期长，以毫秒数指定
     until: 1464759086797  // 缓存的到期时间，以具体日期时间的时间戳指定
 });
 ```
+
+## options
+
+#### `async`(可选)：布尔值
+
+是否开启异步方式使用，默认为`false`。如果开启，则`set/get/has/remove`四个方法的返回值都是`Promise`实例，可以调用`then`方法。
+
+默认情况下，以同步方式使用
+
+```js
+let storage = nattyStorage({
+    key: 'foo'
+});
+// 设置值
+try {
+    storage.set('x', 'x');
+} catch (error) {
+    // 处理错误
+}
+// 获取值
+console.log(storage.get('x')); // => 'x'
+```
+
+开启异步方式使用
+
+```js
+let storage = nattyStorage({
+    async: true, // 开启异步方式使用
+    key: 'foo'
+});
+// 设置值
+storage.set('x', 'x').then(function(){
+    // 获取值
+    console.log(storage.get('x')); // => 'x'
+}).catch(function(error){
+    // 处理错误
+});
+```
+
 
 #### `type`(可选)：枚举值
 
@@ -39,11 +79,11 @@ let storage = nattyStorage({
 
 指定缓存对象存储数据所使用的唯一标识。如果两个缓存对象的`key`值相同，则缓存的数据也是相同的。
 
-#### `tag`(可选)：字符串
+#### `id`(可选)：字符串
 
-通过一个标记来判断缓存对象所存储的数据是否有效。`tag`不同则缓存失效。
+通过一个标记来判断缓存对象所存储的数据是否有效。`id`不同则缓存失效。
 
-> 通常tag的值是一个字符串标识，比如版本号。
+> 通常`id`的值是一个字符串标识，比如版本号。
 
 #### `duration`(可选)：毫秒数
 
@@ -54,7 +94,7 @@ let storage = nattyStorage({
 通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
 
 
-## 设置数据
+## set()
 
 设置数据包括添加新数据和修改已有的数据，都很方便。
 
@@ -79,7 +119,7 @@ storage.set('foo.bar', 'x').then().catch();
 storage.set('fo\\.o.bar', 'x').then().catch();
 ```
 
-## 获取数据
+## get()
 
 获取数据支持获取全部数据和以路径方式获取部分数据。
 
@@ -101,7 +141,9 @@ storage.get('foo.bar').then().catch();
 storage.get('fo\\.o.bar').then().catch();
 ```
 
-## 判断数据是否存在
+## has()
+
+判断数据是否存在
 
 ```js
 // 根据指定的路径，判断数据是否存在
@@ -125,7 +167,7 @@ storage.has().then().catch();
 ```
 
 
-## 删除数据
+## remove()
 
 删除数据会同时删除指定的键和对应的值。
 
@@ -137,7 +179,7 @@ storage.remove('x.y').then().catch();
 storage.remove().then().catch();
 ```
 
-## 销毁实例
+## destroy()
 
 销毁缓存对象实例
 
@@ -171,7 +213,7 @@ npm install es5-shim --save
 <![endif]-->
 ```
 
-## 开发
+## dev
 
 把代码`clone`到本地，在根目录下执行：
 
@@ -180,7 +222,7 @@ npm install
 npm run dev
 ```
 
-## 构建
+## build
 
 ```shell
 npm run build

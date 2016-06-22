@@ -66,7 +66,10 @@ let extend = (receiver = {}, supplier = {}) => {
 	return receiver;
 };
 
+let noop = () => {};
+
 module.exports = {
 	extend: redo(extend),
+	noop,
 	isPlainObject
 };

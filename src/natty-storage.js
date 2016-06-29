@@ -67,7 +67,7 @@ let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
  *     type: 'localstorage', // sessionstorage, variable
  *       key: 'city',
  *       // 验证是否有效，如果是首次创建该LS，则不执行验证
- *       id: '1.0'
+ *       tag: '1.0'
  *  })
  */
 class Storage {
@@ -126,7 +126,7 @@ class Storage {
 
         // 更新验证数据
         t._storage.set(t._CHECK_KEY, t._checkData = {
-            id:    t.config.id,
+            tag:    t.config.tag,
             lastUpdate: t._createStamp,
             duration:   t.config.duration,
             until: t.config.until
@@ -139,7 +139,7 @@ class Storage {
      */
     isOutdated() {
         let t = this;
-        if (t.config.id && t.config.id !== t._checkData.id) {
+        if (t.config.tag && t.config.tag !== t._checkData.tag) {
             return TRUE;
         }
 

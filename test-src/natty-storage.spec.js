@@ -177,13 +177,13 @@ describe('nattyStorage v' + VERSION + ' Unit Test', function() {
 
         describe('validity checking', function() {
 
-            it('id checking: invalid', function(done){
+            it('tag checking: invalid', function(done){
                 let id = getId();
                 let ls = nattyStorage({
                     async: true,
                     type: 'localStorage',
                     key: id, // 保证之前不存在
-                    id: '1.0'
+                    tag: '1.0'
                 });
 
                 ls.set('x', 'x').then(function () {
@@ -192,7 +192,7 @@ describe('nattyStorage v' + VERSION + ' Unit Test', function() {
                         async: true,
                         type: 'localStorage',
                         key: id, // 保证之前存在
-                        id: '2.0'
+                        tag: '2.0'
                     });
 
                     ls2.get().then(function (data) {
@@ -214,7 +214,7 @@ describe('nattyStorage v' + VERSION + ' Unit Test', function() {
                     async: true,
                     type: 'localStorage',
                     key: id, // 保证之前不存在
-                    id: '1.0'
+                    tag: '1.0'
                 });
 
                 let value = {x:'x'};
@@ -224,7 +224,7 @@ describe('nattyStorage v' + VERSION + ' Unit Test', function() {
                         async: true,
                         type: 'localStorage',
                         key: id, // 保证之前存在
-                        id: '1.0'
+                        tag: '1.0'
                     });
 
                     ls2.get().then(function (data) {

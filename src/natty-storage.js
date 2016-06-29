@@ -1,23 +1,34 @@
 "use strict";
 
-const {extend, isPlainObject, noop} = require('./util');
-const win = window;
-const hasWindow = 'undefined' !== typeof win;
+const {extend, isPlainObject, isObject, noop} = require('./util');
+
+let VERSION;
+__BUILD_VERSION__
+
 const NULL = null;
 const EMPTY = '';
 const TRUE = true;
 const FALSE = !TRUE;
 const PLACEHOLDER = '_placeholder';
+const UNDEFINED = undefined;
 
-let VERSION;
-__BUILD_VERSION__
-
-let support = {
-    localStorage: hasWindow && !!win.localStorage && test('localStorage'),
-    sessionStorage: hasWindow && !!win.sessionStorage && test('sessionStorage')
+// 只是判断有没有`storage`对象, 注意, 有了也不一定能用!!! 比如隐身模式
+const has = {
+    localStorage: typeof localStorage === 'object',
+    sessionStorage: typeof sessionStorage === 'object'
 };
 
+// 真正判断能不能用
+let support = {
+    localStorage: test('localStorage'),
+    sessionStorage: test('sessionStorage')
+};
+
+// 能力测试
 function test(type) {
+    if (!has[type]) {
+        return FALSE;
+    }
     let data = {'x':'x'};
     let key = 'natty-storage-test';
     let tester = createStorage(type);
@@ -356,7 +367,9 @@ function throwError(e) {
 }
 
 function createStorage(storage) {
-    storage = win[storage]
+    //  不用担心这个window, 这个函数能调用, 说明已经是在浏览器端了
+    storage = window[storage];
+    // storage = storage === 'localStorage' ? localStorage : sessionStorage;
     return {
         // NOTE  值为undefined的情况, JSON.stringify方法会将键删除
         // JSON.stringify({x:undefined}) === "{}"
@@ -448,8 +461,8 @@ function getValueByPath(path, data, isKey) {
             let key = keys.shift();
             data = getValueByPath(key, data, true);
 
-            if (typeof data !== 'object' || data === undefined) {
-                if (keys.length) data = undefined;
+            if (typeof data !== 'object' || data === UNDEFINED) {
+                if (keys.length) data = UNDEFINED;
                 break;
             }
         }

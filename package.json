@@ -1,6 +1,6 @@
 {
   "name": "natty-storage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "repository": "https://github.com/Jias/natty-storage.git",
   "author": "gnosaij",
@@ -36,7 +36,7 @@
     "webpack-stream": "^2.1.0"
   },
   "scripts": {
-    "dev": "gulp watch",
+    "start": "gulp watch",
     "build": "gulp delete-dist-dir && gulp pack && gulp min"
   },
   "license": "MIT"

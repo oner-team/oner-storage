@@ -36,7 +36,7 @@ let storage = nattyStorage({
 });
 ```
 
-## options
+### options
 
 #### `async`(可选)：布尔值
 
@@ -100,7 +100,7 @@ storage.set('x', 'x').then(function(){
 通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
 
 
-## set()
+## storage.set()
 
 设置数据包括添加新数据和修改已有的数据，都很方便。
 
@@ -125,7 +125,7 @@ storage.set('foo.bar', 'x').then().catch();
 storage.set('fo\\.o.bar', 'x').then().catch();
 ```
 
-## get()
+## storage.get()
 
 获取数据支持获取全部数据和以路径方式获取部分数据。
 
@@ -147,7 +147,7 @@ storage.get('foo.bar').then().catch();
 storage.get('fo\\.o.bar').then().catch();
 ```
 
-## has()
+## storage.has()
 
 判断数据是否存在
 
@@ -172,8 +172,12 @@ storage.has('x.y').then(function(result){
 storage.has().then().catch();
 ```
 
+## storage.dump()
 
-## remove()
+在控制台输出当前`storage`对象的数据
+
+
+## storage.remove()
 
 删除数据会同时删除指定的键和对应的值。
 
@@ -185,7 +189,7 @@ storage.remove('x.y').then().catch();
 storage.remove().then().catch();
 ```
 
-## destroy()
+## storage.destroy()
 
 销毁缓存对象实例
 
@@ -218,6 +222,14 @@ npm install es5-shim --save
 <script type="text/javascript" src="./node_modules/es5-shim/es5-sham.min.js"></script>
 <![endif]-->
 ```
+
+## Next TODO
+
+* 添加静态方法`nattyStorage.clean()`，清理失效的缓存。
+  - 有效期长(`duration`)已到，删除。
+  - 有效期至(`until`)已过，删除。
+  - 其他：比如删除最后更新日期超过一周的，待定。
+* 添加静态方法`nattyStorage.list()`，列出当前页面所有的由`natty-storage`所创建的缓存数据。
 
 ## dev
 

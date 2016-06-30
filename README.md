@@ -228,7 +228,7 @@ npm install es5-shim --save
 * 添加静态方法`nattyStorage.clean()`，清理失效的缓存。
   - 有效期长(`duration`)已到，删除。
   - 有效期至(`until`)已过，删除。
-  - 其他：比如删除最后更新日期超过一周的，待定。
+  - 其他待定：最后读取日期超过指定时间(比如：一周)的，删除。
 * 添加静态方法`nattyStorage.list()`，列出当前页面所有的由`natty-storage`所创建的缓存数据。
 
 ## dev

@@ -21,7 +21,8 @@ const has = {
 // 真正判断能不能用
 let support = {
     localStorage: test('localStorage'),
-    sessionStorage: test('sessionStorage')
+    sessionStorage: test('sessionStorage'),
+    variable: TRUE
 };
 
 // 能力测试
@@ -59,9 +60,6 @@ let defaultGlobalConfig = {
     async: false
 };
 
-// 运行时的全局配置
-let runtimeGlobalConfig = extend({}, defaultGlobalConfig);
-
 /**
  *  let ls = new nattyStorage({
  *     type: 'localstorage', // sessionstorage, variable
@@ -78,14 +76,14 @@ class Storage {
     constructor(options = {}) {
         let t = this;
 
-        t.config = extend({}, runtimeGlobalConfig, options);
+        t.config = extend({}, defaultGlobalConfig, options);
 
         // 必须配置`key`!!! 无论什么类型!!!
         if (!t.config.key) {
-            throw new Error('`key` is missing, please check the options passed in `nattyStorage` constructor.');
+            throw new Error('`key` is required when using natty-storage!');
         }
 
-        t._storage = support[t.config.type] ? createStorage(t.config.type) : createVariable();
+        t._storage = (t.config.type !== 'variable' && support[t.config.type]) ? createStorage(t.config.type) : createVariable();
 
         t._CHECK_KEY = 'nattyStorageCheck:' + t.config.key;
         t._DATA_KEY = 'nattyStorageData:' + t.config.key;
@@ -334,34 +332,6 @@ class Storage {
     }
 }
 
-let nattyStorage = (options) => {
-    return new Storage(options);
-}
-
-nattyStorage.version = VERSION;
-nattyStorage._variable = variable;
-nattyStorage.support = support;
-
-
-
-/**
- * 执行全局配置
- * @param options
- */
-nattyStorage.setGlobal = (options) => {
-    runtimeGlobalConfig = extend({}, defaultGlobalConfig, options);
-    return this;
-}
-
-/**
- * 获取全局配置
- * @param property {String} optional
- * @returns {*}
- */
-nattyStorage.getGlobal = (property) => {
-    return property ? runtimeGlobalConfig[property] : runtimeGlobalConfig;
-}
-
 function throwError(e) {
     throw new Error(e);
 }
@@ -516,5 +486,13 @@ function isEmptyPlainObject(v) {
     }
     return ret;
 }
+
+let nattyStorage = (options) => {
+    return new Storage(options);
+}
+
+nattyStorage.version = VERSION;
+nattyStorage._variable = variable;
+nattyStorage.support = support;
 
 module.exports = nattyStorage;

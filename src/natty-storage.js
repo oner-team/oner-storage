@@ -32,11 +32,15 @@ function test(type) {
     }
     let data = {'x':'x'};
     let key = 'natty-storage-test';
-    let tester = createStorage(type);
-    tester.set(key, data);
-    let useable = JSON.stringify(tester.get(key)) === JSON.stringify(data);
-    tester.remove(key);
-    return useable;
+        let tester = createStorage(type);
+    try {
+        tester.set(key, data);
+        let useable = JSON.stringify(tester.get(key)) === JSON.stringify(data);
+        tester.remove(key);
+        return useable;
+    } catch(e) {
+        return false;
+    }
 }
 
 // 全局默认配置
@@ -74,6 +78,7 @@ class Storage {
      * @param options
      */
     constructor(options = {}) {
+
         let t = this;
 
         t.config = extend({}, defaultGlobalConfig, options);
@@ -169,7 +174,7 @@ class Storage {
 
         let t = this;
         let argumentLength = arguments.length;
-        
+
         let todo = (resolve, reject) => {
             try {
                 if (!t._data) {
@@ -186,6 +191,7 @@ class Storage {
                 } else {
                     setValueByPath(path, data, t._data);
                 }
+
                 t._storage.set(t._DATA_KEY, t._data);
                 resolve();
             } catch (e) {
@@ -326,6 +332,11 @@ class Storage {
     }
 
     dump() {
+        const t = this;
+        if (!t._data) {
+            t._lazyInit();
+        }
+
         if (JSON && console) {
             console.log(JSON.stringify(this._data, NULL, 4));
         }

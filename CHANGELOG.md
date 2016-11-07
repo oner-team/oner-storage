@@ -1,5 +1,9 @@
 ## Change log
 
+#### v1.1.2 / 2016-11-07
+
+* 修复`Safari`隐身模式下`storage`被禁用导致的异常。([@pfdgithub](https://github.com/pfdgithub) in [#32](https://github.com/jias/natty-fetch/issues/32))
+
 #### v1.1.1 / 2016-06-30
 
 * `nattyStorage.support`对象添加`variable`值，解决和[`natty-fetch`](https://github.com/Jias/natty-fetch)对接的完整性。

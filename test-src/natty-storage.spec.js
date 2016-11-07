@@ -27,91 +27,91 @@ describe('nattyStorage v' + VERSION + ' Unit Test', function() {
         });
     });
 
-    describe('environment',function() {
-        this.timeout(1000*60*5);
-        it.skip('support localStorage: ' + nattyStorage.support.localStorage);
-        it.skip('support sessionStorage: ' + nattyStorage.support.sessionStorage);
-        it('support', function () {
-            expect(nattyStorage.support.localStorage).to.be.a('boolean');
-            expect(nattyStorage.support.sessionStorage).to.be.a('boolean');
-        });
-
-        let checkMax = function (type, cb) {
-            let ls = nattyStorage({
-                async: true,
-                type: type,
-                key: 'big'
-            });
-
-            let startMB = s1MB + s1MB + s1MB;
-            let s100KB = '';
-            for (let i=1, l=100; i<=l; i++) {
-                s100KB += s1KB;
-            }
-
-            let s10KB = '';
-            for (let i=1, l=10; i<=l; i++) {
-                s10KB += s1KB;
-            }
-
-            let data = startMB;
-
-
-            let setMore100KB = function(){
-                data += s100KB;
-                // console.log('add 100KB: ', (data.length/1024).toFixed(2) + 'KB');
-                return ls.set('x', data);
-            };
-
-            let setMore10KB = function(){
-                data += s10KB;
-                // console.log('add 10KB: ', (data.length/1024).toFixed(2) + 'KB');
-                return ls.set('x', data);
-            };
-
-            let mb = function (data) {
-                return (data.length/1024/1024).toFixed(2) + 'MB';
-            };
-
-
-            let i = 1;
-            let p = Promise.resolve();
-            while(i<30){
-                i++;
-                p = p.then(setMore100KB);
-            }
-            p.then(function () {
-                cb('> ' + mb(data));
-                ls.destroy();
-            }).catch(function () {
-                let ii = 1;
-                let pp = Promise.resolve();
-                while(ii<50){
-                    ii++;
-                    pp = pp.then(setMore10KB);
-                }
-                pp.then(function () {
-                    cb('> ' +  mb(data));
-                    ls.destroy();
-                }).catch(function () {
-                    cb(mb(data));
-                    ls.destroy();
-                });
-            });
-        };
-
-        // 找出最大容量
-        setTimeout(function () {
-            checkMax('localStorage', function (max) {
-                document.getElementById('maxLS').innerHTML = max;
-                // done();
-            });
-            checkMax('sessionStorage', function (max) {
-                document.getElementById('maxSS').innerHTML = max;
-                // done();
-            });
-        }, 1000);
-    });
+    // describe('environment',function() {
+    //     this.timeout(1000*60*5);
+    //     it.skip('support localStorage: ' + nattyStorage.support.localStorage);
+    //     it.skip('support sessionStorage: ' + nattyStorage.support.sessionStorage);
+    //     it('support', function () {
+    //         expect(nattyStorage.support.localStorage).to.be.a('boolean');
+    //         expect(nattyStorage.support.sessionStorage).to.be.a('boolean');
+    //     });
+    //
+    //     let checkMax = function (type, cb) {
+    //         let ls = nattyStorage({
+    //             async: true,
+    //             type: type,
+    //             key: 'big'
+    //         });
+    //
+    //         let startMB = s1MB + s1MB + s1MB;
+    //         let s100KB = '';
+    //         for (let i=1, l=100; i<=l; i++) {
+    //             s100KB += s1KB;
+    //         }
+    //
+    //         let s10KB = '';
+    //         for (let i=1, l=10; i<=l; i++) {
+    //             s10KB += s1KB;
+    //         }
+    //
+    //         let data = startMB;
+    //
+    //
+    //         let setMore100KB = function(){
+    //             data += s100KB;
+    //             // console.log('add 100KB: ', (data.length/1024).toFixed(2) + 'KB');
+    //             return ls.set('x', data);
+    //         };
+    //
+    //         let setMore10KB = function(){
+    //             data += s10KB;
+    //             // console.log('add 10KB: ', (data.length/1024).toFixed(2) + 'KB');
+    //             return ls.set('x', data);
+    //         };
+    //
+    //         let mb = function (data) {
+    //             return (data.length/1024/1024).toFixed(2) + 'MB';
+    //         };
+    //
+    //
+    //         let i = 1;
+    //         let p = Promise.resolve();
+    //         while(i<30){
+    //             i++;
+    //             p = p.then(setMore100KB);
+    //         }
+    //         p.then(function () {
+    //             cb('> ' + mb(data));
+    //             ls.destroy();
+    //         }).catch(function () {
+    //             let ii = 1;
+    //             let pp = Promise.resolve();
+    //             while(ii<50){
+    //                 ii++;
+    //                 pp = pp.then(setMore10KB);
+    //             }
+    //             pp.then(function () {
+    //                 cb('> ' +  mb(data));
+    //                 ls.destroy();
+    //             }).catch(function () {
+    //                 cb(mb(data));
+    //                 ls.destroy();
+    //             });
+    //         });
+    //     };
+    //
+    //     // 找出最大容量
+    //     setTimeout(function () {
+    //         checkMax('localStorage', function (max) {
+    //             document.getElementById('maxLS').innerHTML = max;
+    //             // done();
+    //         });
+    //         checkMax('sessionStorage', function (max) {
+    //             document.getElementById('maxSS').innerHTML = max;
+    //             // done();
+    //         });
+    //     }, 1000);
+    // });
 
     describe('localStorage', function() {
         this.timeout(1000*10);

@@ -21,65 +21,33 @@ storage plus for javascript
 npm install natty-storage --save
 ```
 
-## nattyStorage(options)
+## 创建缓存对象
 
-创建缓存对象的实例
+方法
 
 ```js
-let storage = nattyStorage({
-    async: true,          // 是否以异步方式使用
-    type: 'localStorage', // 缓存方式
-    key: 'ChinaCity',     // !!! 唯一必选的参数，用于内部存储
-    tag: 'v1.0',          // 缓存的标记，用于判断是否有效
-    duration: 1000*60*10, // 缓存的有效期长，以毫秒数指定
-    until: 1464759086797  // 缓存的到期时间，以具体日期时间的时间戳指定
+const storage = nattyStorage(options)
+```
+
+示例
+
+```js
+const storage = nattyStorage({
+    type:     'localStorage',  // 缓存方式, 默认为'localStorage'
+    key:      'ChinaCity',     // !!! 唯一必选的参数, 用于内部存储 !!!
+    tag:      'v1.0',          // 缓存的标记, 用于判断是否有效
+    duration: 1000*60*10,      // 缓存的有效期长, 以毫秒数指定
+    until:    1464759086797    // 缓存的到期时间, 以具体日期时间的时间戳指定
 });
 ```
 
-### options
-
-#### `async`(可选)：布尔值
-
-是否开启异步方式使用，默认为`false`。如果开启，则`set/get/has/remove`四个方法的返回值都是`Promise`实例，可以调用`then`方法。
-
-默认情况下，以同步方式使用
-
-```js
-let storage = nattyStorage({
-    key: 'foo'
-});
-// 设置值
-try {
-    storage.set('x', 'x');
-} catch (error) {
-    // 处理错误
-}
-// 获取值
-console.log(storage.get('x')); // => 'x'
-```
-
-开启异步方式使用
-
-```js
-let storage = nattyStorage({
-    async: true, // 开启异步方式使用
-    key: 'foo'
-});
-// 设置值
-storage.set('x', 'x').then(function(){
-    // 获取值
-    console.log(storage.get('x')); // => 'x'
-}).catch(function(error){
-    // 处理错误
-});
-```
-
+参数
 
 #### `type`(可选)：枚举值
 
 指定缓存对象存储数据的方式，可选值为`localStorage`、`sessionStorage`和`variable`。默认为`localStorage`。
 
-当指定`type`为`localStorage/sessionStorage`，但浏览器的`localStorage/sessionStorage`不可用时(比如部分浏览器的隐身模式下)，则自动降级到`varable`方式存储。
+注意：当指定`type`的值为`localStorage/sessionStorage`，但浏览器的`localStorage/sessionStorage`不可用时(比如`Safari`浏览器的隐身模式)，会自动降级到`varable`方式存储。
 
 #### `key`(必选)：字符串
 
@@ -87,117 +55,155 @@ storage.set('x', 'x').then(function(){
 
 #### `tag`(可选)：字符串
 
-通过一个标记来判断缓存对象所存储的数据是否有效。`tag`不同则缓存失效。
+用于验证数据有效性的标识(一)。通过一个标记来判断缓存对象所存储的数据是否有效。`tag`不同则缓存失效。
 
 > 通常`tag`的值是一个字符串标识，比如版本号。
 
 #### `duration`(可选)：毫秒数
 
-通过"有效期长"来判断缓存对象所存储的数据是否有效。过期则缓存失效，不过期则顺延。
+用于验证数据有效性的标识(二)。通过"有效期长"来判断缓存对象所存储的数据是否有效。过期则缓存失效，不过期则顺延。
 
 #### `until`(可选)：时间戳
 
-通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
+用于验证数据有效性的标识(三)。通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
 
 
-## storage.set()
+## 同步存取数据
 
-设置数据包括添加新数据和修改已有的数据，都很方便。
+方法
 
 ```js
-// 设置完整数据
-storage.set({x:'x'}).then(function(){
-    // do something
-}).catch(function(e){
-    // deal the error
-});
+// 同步存
+storage.set(key, value)  
+// 同步取
+storage.get(key)
+```
 
-// 设置任意类型的完整数据
-storage.set('x').then().catch();
+参数
 
-// 设置指定键的数据
-storage.set('foo', 'x').then().catch();
+- `key`: 字符串或以`.`分割的路径值
+- `value`: 任意类型的数据
+
+示例
+
+```js
+storage.set('foo', 'x')
+storage.get('foo) // => 'x'
+
+// 可以直接存字面量对象
+storage.set('foo', {x: 'x'})
+storage.get('foo) // => {x: 'x'}
 
 // 设置指定路径的数据
-storage.set('foo.bar', 'x').then().catch();
+storage.set('foo.bar', 'x')
+storage.get('foo.bar') // => 'x'
+storage.get('foo') // => {bar: 'x', ...}
 
 // 如果路径中的某个键包含`.`号, 转义即可
-storage.set('fo\\.o.bar', 'x').then().catch();
+storage.set('fo\\.o.bar', 'x')
+storage.get('fo\\.o.bar') // => 'x'
 ```
 
-## storage.get()
+## 异步存取数据
 
-获取数据支持获取全部数据和以路径方式获取部分数据。
+方法
 
 ```js
-// 获取完整数据
-storage.get().then(function(data){
-    // do something with data
-}).catch(function(e){
+// 异步存
+storage.async.set(key, value).then(data => {}).catch(error => {})
+// 取异步
+storage.async.get(key).then(data => {}).catch(error => {})
+```
+> 提示：`storage.async.set/storage.async.get`方法返回一个`Promise`实例对象
+
+参数
+
+- `key`: 字符串或以`.`分割的路径值
+- `value`: 任意类型的数据
+- `fn`: 函数
+
+示例
+
+```js
+// 异步存
+storage.async.set('foo', 'x').then(data => {
+    // do something
+    // data 为存入的值 'x'
+}).catch(error => {
     // deal the error
-});
+})
 
-// 获取指定的键的数据
-storage.get('foo').then().catch();
-
-// 获取指定的路径的数据
-storage.get('foo.bar').then().catch();
-
-// 如果路径中的某个键包含`.`号, 转义即可
-storage.get('fo\\.o.bar').then().catch();
+// 异步取
+storage.async.get('foo').then(data => {
+    // do something
+    // data 为取出的值 'x'
+}).catch(error => {
+    // deal the error
+})
 ```
 
-## storage.has()
-
-判断数据是否存在
+## 判断数据是否存在
 
 ```js
-// 根据指定的路径，判断数据是否存在
-storage.has('x.y').then(function(result){
+// 同步方式
+const result = storage.has('foo.bar') // => {has: true, value: 'x'}
+
+// 异步方式
+storage.async.has('foo.bar').then(result => {
 	// 存在
-	// {
+	// result = {
 	//    has: true,
 	//    value: 'value'
 	// }
-	//
+
 	// 不存在
-	// {
+	// result = {
 	//    has: false,
 	//    value: undefined
 	// }
-}).catch();
-
-// 不指定路径，判断是否设置过全量的值
-// 如果没有设置过全量的值，又没有指定查找路径，则报错
-storage.has().then().catch();
+}).catch(error => {})
 ```
 
-## storage.dump()
+## 打印数据
 
-在控制台输出当前`storage`对象的数据
-
-
-## storage.remove()
-
-删除数据会同时删除指定的键和对应的值。
+在控制台输出当前缓存对象的所有数据，没有返回值
 
 ```js
-// 删除设置指定路径的数据和键
-storage.remove('x.y').then().catch();
-
-// 清空数据为{}
-storage.remove().then().catch();
+storage.dump()
 ```
 
-## storage.destroy()
 
-销毁缓存对象实例
+## 删除键和值
+
+同时删除指定的键和对应的值
 
 ```js
-storage.destroy();
+// 同步删除
+storage.remove('foo.bar')
+
+// 同步删除所有数据
+storage.remove()
+
+// 异步删除
+storage.async.remove('foo.bar').then(() => {}).catch(error => {})
+
+// 异步删除所有数据
+storage.async.remove().then(() => {}).catch(error => {})
 ```
 
-## 外部依赖
+## 销毁缓存对象实例
+
+storage.destroy()
+
+```js
+// 同步销毁
+storage.destroy()
+
+// 异步销毁
+storage.async.destroy().then(() => {}).catch(error => {})
+```
+
+## 非现代浏览器的外部依赖
 
 `nattyStorage`依赖现代浏览器的两个对象。在非现代浏览器下，可以通过引入`polyfill`解决。
 
@@ -245,3 +251,7 @@ npm start
 ```shell
 npm run build
 ```
+
+## ref
+
+https://www.html5rocks.com/en/tutorials/offline/quota-research/

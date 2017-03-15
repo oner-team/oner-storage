@@ -1,52 +1,17 @@
-"use strict";
+import {extend, isPlainObject, noop, hasWindow} from './util'
 
-const {extend, isPlainObject, isObject, noop} = require('./util');
-
-let VERSION;
-__BUILD_VERSION__
-
-const NULL = null;
-const EMPTY = '';
-const TRUE = true;
-const FALSE = !TRUE;
-const PLACEHOLDER = '_placeholder';
-const UNDEFINED = undefined;
-
-// 只是判断有没有`storage`对象, 注意, 有了也不一定能用!!! 比如隐身模式
-const has = {
-    localStorage: typeof localStorage === 'object',
-    sessionStorage: typeof sessionStorage === 'object'
-};
-
-// 真正判断能不能用
-let support = {
-    localStorage: test('localStorage'),
-    sessionStorage: test('sessionStorage'),
-    variable: TRUE
-};
-
-// 能力测试
-function test(type) {
-    if (!has[type]) {
-        return FALSE;
-    }
-    let data = {'x':'x'};
-    let key = 'natty-storage-test';
-        let tester = createStorage(type);
-    try {
-        tester.set(key, data);
-        let useable = JSON.stringify(tester.get(key)) === JSON.stringify(data);
-        tester.remove(key);
-        return useable;
-    } catch(e) {
-        return false;
-    }
-}
+const NULL = null
+const EMPTY = ''
+const TRUE = true
+const FALSE = !TRUE
+const PLACEHOLDER = '_placeholder'
+const UNDEFINED = undefined
+const supportStorage = isSupportStorage()
 
 // 全局默认配置
 let defaultGlobalConfig = {
     // localStorage, sessionStorage, variable
-    type: 'localStorage',
+    type: 'variable',
 
     // 存到浏览器缓存中使用的键
     key: EMPTY,
@@ -58,11 +23,8 @@ let defaultGlobalConfig = {
     duration: 0,
 
     // 有效期至, 时间戳
-    until: 0,
-
-    // 是否以异步方式使用set/get/has/remove
-    async: false
-};
+    until: 0
+}
 
 /**
  *  let ls = new nattyStorage({
@@ -79,61 +41,62 @@ class Storage {
      */
     constructor(options = {}) {
 
-        let t = this;
-
-        t.config = extend({}, defaultGlobalConfig, options);
+        this.config = extend({}, defaultGlobalConfig, options)
 
         // 必须配置`key`!!! 无论什么类型!!!
-        if (!t.config.key) {
-            throw new Error('`key` is required when using natty-storage!');
+        if (!this.config.key) {
+            throw new Error('`key` is required when creating a storage!')
         }
 
-        t._storage = (t.config.type !== 'variable' && support[t.config.type]) ? createStorage(t.config.type) : createVariable();
+        this._storage = (this.config.type !== 'variable' && supportStorage) ?
+            createStorage(this.config.type) : createVariable()
 
-        t._CHECK_KEY = 'nattyStorageCheck:' + t.config.key;
-        t._DATA_KEY = 'nattyStorageData:' + t.config.key;
-        t._placeholderUsed = FALSE;
+        this._CHECK_KEY = 'ns-check:' + this.config.key
+        this._DATA_KEY = 'ns-data:' + this.config.key
 
         // 每个`storage`实例对象都是全新的, 只有`storage`实例的数据才可能是缓存的.
-        t._createStamp = +new Date();
+        this._createStamp = +new Date()
+
+        // 数据备份
+        // 每次set新值之前，先备份当前数据，如果set过程中失败了，则恢复该备份数据
+        this._backupData = {}
     }
 
     /**
      * 惰性初始化 在首次调用`set、get、remove`方法时才执行一次 且只执行一次
      * @private
-     * @note 为什么要做惰性初始化, 因为
+     * @note 为什么要做惰性初始化, 因为当数据大时，可以把读取数据的时间推迟
+     *       到第一次调用`set、get、remove`方法时, 从而可以非常快的创建`storage`实例。
      */
     _lazyInit() {
-        let t = this;
 
-        t._checkData = t._storage.get(t._CHECK_KEY);
+        this._checkData = this._storage.get(this._CHECK_KEY)
 
         // 当前`key`的`storage`是否已经存在
-        t._isNew = t._checkData === NULL;
-        // console.log('is new t._checkData', t._isNew);
+        this._isNew = this._checkData === NULL
 
         // 没有对应的本地缓存 或 本地缓存已过期 则 创建新的`storage`实例
-        if (t._isNew || t.isOutdated()) {
-            // console.log('create new t._checkData');
+        if (this._isNew || this.isOutdated()) {
+            // console.log('create new t._checkData')
             // 新的数据内容
-            t._storage.set(t._DATA_KEY, t._data = {});
+            this._storage.set(this._DATA_KEY, this._data = {})
         }
-        // 使用已有的本地缓存
+
+        // 如果有对应的本地缓存，则将数据添加到`this._data`上
         else {
-            // console.log('use cached t._checkData');
-            t._data = t._storage.get(t._DATA_KEY);
-            if (t._data === NULL) {
-                t._storage.set(t._DATA_KEY, t._data = {});
+            this._data = this._storage.get(this._DATA_KEY)
+            if (this._data === NULL) {
+                this._storage.set(this._DATA_KEY, this._data = {})
             }
         }
 
-        // 更新验证数据
-        t._storage.set(t._CHECK_KEY, t._checkData = {
-            tag:    t.config.tag,
-            lastUpdate: t._createStamp,
-            duration:   t.config.duration,
-            until: t.config.until
-        });
+        // 更新验证条件，用于下次检查有效性
+        this._storage.set(this._CHECK_KEY, this._checkData = {
+            tag:    this.config.tag,
+            lastUpdate: this._createStamp,
+            duration:   this.config.duration,
+            until: this.config.until
+        })
     }
 
     /**
@@ -141,107 +104,117 @@ class Storage {
      * @returns {boolean}
      */
     isOutdated() {
-        let t = this;
-        if (t.config.tag && t.config.tag !== t._checkData.tag) {
-            return TRUE;
+        if (this.config.tag && this.config.tag !== this._checkData.tag) {
+            return TRUE
         }
 
-        let now = +new Date();
+        const now = +new Date()
         // 注意要使用`_checkData`的`duration`验证, 而不是用`config`的`duration`验证!!
-        if (t._checkData.duration && now - t._checkData.lastUpdate > t._checkData.duration) {
-            return TRUE;
+        if (this._checkData.duration && now - this._checkData.lastUpdate > this._checkData.duration) {
+            return TRUE
         }
 
-        if (t._checkData.until && now > t._checkData.until) {
-            return TRUE;
+        if (this._checkData.until && now > this._checkData.until) {
+            return TRUE
         }
 
         // console.log('outdated: false');
-        return FALSE;
+        return FALSE
     }
 
-    /**
-     * 设置指指定路径的数据
-     * @param path {Any} optional 要设置的值的路径 或 要设置的完整值
-     * @param value {Any} 值
-     *
-     * instance.set(object)
-     * instance.set('foo', any-type)
-     * instance.set('foo.bar', any-type)
-     * @note ls.set('x') 则 整个值为 'x'
-     */
+    // 同步设置数据
+    // @param path {Any} optional 要设置的值的路径 或 要设置的完整值
+    // @param value {Any} 要设置的值
     set(path, data) {
+        if (!this._data) {
+            this._lazyInit()
+        }
 
-        let t = this;
-        let argumentLength = arguments.length;
+        // step1: 备份数据
+        this._backupData = this._data
 
-        let todo = (resolve, reject) => {
+        // step2: 更新`this._data`
+        setValueByPath(path, data, this._data)
+
+        // step3: 将`this._data`存储到`storage`中
+        try {
+            this._storage.set(this._DATA_KEY, this._data)
+        } catch (e) {
+            // 如果存储失败了，恢复原有数据
+            // 保持`this._data`和`storage`中的值同步，是最基本的功能
+            this._storage.set(this._DATA_KEY, this._data = this._backupData)
+            throw new Error(e)
+        }
+    }
+
+    // 异步设置数据
+    // @param path {Any} optional 要设置的值的路径 或 要设置的完整值
+    // @param value {Any} 要设置的值
+    asyncSet(path, data) {
+        return new Promise((resolve, reject) => {
             try {
-                if (!t._data) {
-                    t._lazyInit();
-                }
-
-                if (argumentLength === 1) {
-                    if (isPlainObject(path)) {
-                        t._data = path;
-                    } else {
-                        t._data[PLACEHOLDER] = path;
-                        t._placeholderUsed = TRUE;
-                    }
-                } else {
-                    setValueByPath(path, data, t._data);
-                }
-
-                t._storage.set(t._DATA_KEY, t._data);
-                resolve();
-            } catch (e) {
-                reject(e);
+                resolve(this.set(path, data))
+            } catch(e) {
+                reject(e)
             }
-        }
-
-        if (t.config.async) {
-            return new Promise(todo);
-        } else {
-            todo(noop, throwError);
-        }
+        })
     }
 
     /**
      * 获取指定的路径的数据
      * @param path {String} optional 要获取的值的路径 如果不传 则返回整体值
-     * @returns {ny}
+     * @returns {Any}
      *
      * instance.get()
      * instance.get('foo')
      * instance.get('foo.bar')
      */
     get(path) {
-        let t = this;
-        let data;
-        let todo = function (resolve, reject) {
-            try {
-                if (!t._data) {
-                    t._lazyInit();
-                }
 
-                if (path) {
-                    data = getValueByPath(path, t._data);
-                } else if (t._placeholderUsed) {
-                    data = t._data[PLACEHOLDER];
-                } else {
-                    data = t._data;
-                }
-                resolve(data);
-            } catch (e) {
-                reject(e);
-            }
+        if (!this._data) {
+            this._lazyInit()
         }
 
-        if (t.config.async) {
-            return new Promise(todo);
-        } else {
-            todo(noop, throwError);
-            return data;
+        let data
+
+        try {
+            if (path) {
+                data = getValueByPath(path, this._data)
+            } else {
+                data = this._data
+            }
+        } catch (e) {
+            throw new Error(e)
+        }
+
+        return data
+    }
+
+    asyncGet(path) {
+        return new Promise((resolve, reject) => {
+            try {
+                resolve(this.get(path))
+            } catch(e) {
+                reject(e)
+            }
+        })
+    }
+
+    has(path) {
+        if (!this._data) {
+            this._lazyInit()
+        }
+
+        if (!path) {
+            throw new Error('a `key|path` argument should be passed into the `has` method')
+        }
+
+        return hasValueByPath(path, this._data) ? {
+            has: TRUE,
+            value: getValueByPath(path, this._data)
+        }: {
+            has: FALSE,
+            value: UNDEFINED
         }
     }
 
@@ -250,45 +223,14 @@ class Storage {
      * @param path {String} optional 要查询的路径
      * @returns {Promise}
      */
-    has(path) {
-        let t = this;
-        let result;
-        let todo = function (resolve, reject) {
+    asyncHas(path) {
+        return new Promise((resolve, reject) => {
             try {
-                if (!t._data) {
-                    t._lazyInit();
-                }
-
-                // 如果有数据 且 没有使用内置`placeholder`, 说明是使用`path`方式设置的值
-                if (!t._placeholderUsed && !isEmptyPlainObject(t._data)) {
-                    if (!path) {
-                        throw new Error('a `path` argument should be passed into the `has` method');
-                    }
-
-                    result = hasValueByPath(path, t._data) ? {
-                        has: true,
-                        value: getValueByPath(path, t._data)
-                    }: {}
-
-                    resolve(result);
-                } else {
-                    result = t._data.hasOwnProperty(PLACEHOLDER) ? {
-                        has: true,
-                        value: t._data[PLACEHOLDER]
-                    } : {}
-                    resolve(result);
-                }
-            } catch (e) {
-                reject(e);
+                resolve(this.has(path))
+            } catch(e) {
+                reject(e)
             }
-        }
-
-        if (t.config.async) {
-            return new Promise(todo);
-        } else {
-            todo(noop, throwError);
-            return result;
-        }
+        })
     }
 
     /**
@@ -296,30 +238,26 @@ class Storage {
      * @param path {String} optional 要获取的值的路径 如果不传 则返回整体值
      */
     remove(path) {
-        let t = this;
-        let todo = function (resolve, reject) {
-            try {
-                if (!t._data) {
-                    t._lazyInit();
-                }
-                if (path) {
-                    removeKeyAndValueByPath(path, t._data);
-                    t._storage.set(t._DATA_KEY, t._data);
-                } else {
-                    // 删除所有数据, 复原到初始空对象
-                    t.set({});
-                }
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
+        if (!this._data) {
+            this._lazyInit()
         }
-
-        if (t.config.async) {
-            return new Promise(todo);
+        if (path) {
+            removeKeyAndValueByPath(path, this._data)
+            this._storage.set(this._DATA_KEY, this._data)
         } else {
-            todo(noop, throwError);
+            // 删除所有数据, 即复原到初始空对象
+            this.set({})
         }
+    }
+
+    asyncRemove(path) {
+        return new Promise((resolve, reject) => {
+            try {
+                resolve(this.remove(path))
+            } catch(e) {
+                reject(e)
+            }
+        })
     }
 
     /**
@@ -332,65 +270,62 @@ class Storage {
     }
 
     dump() {
-        const t = this;
-        if (!t._data) {
-            t._lazyInit();
+        if (!this._data) {
+            this._lazyInit()
         }
 
         if (JSON && console) {
-            console.log(JSON.stringify(this._data, NULL, 4));
+            console.log(JSON.stringify(this._data, NULL, 4))
         }
     }
 }
 
 function throwError(e) {
-    throw new Error(e);
+    throw new Error(e)
 }
 
 function createStorage(storage) {
     //  不用担心这个window, 这个函数能调用, 说明已经是在浏览器端了
-    storage = window[storage];
+    storage = window[storage]
     // storage = storage === 'localStorage' ? localStorage : sessionStorage;
     return {
         // NOTE  值为undefined的情况, JSON.stringify方法会将键删除
         // JSON.stringify({x:undefined}) === "{}"
         set: function (key, value) {
-            // TODO 看看safari是否还有bug
-            // storage.removeItem(key);
-            storage.setItem(key, JSON.stringify(value));
+            storage.setItem(key, JSON.stringify(value))
         },
         get: function (key) {
-            let value = storage.getItem(key);
+            let value = storage.getItem(key)
             // alert(localStorage[key]);
-            if (!value) return NULL;
+            if (!value) return NULL
             try {
-                value = JSON.parse(value);
+                value = JSON.parse(value)
             } catch (e) {
             }
-            return value;
+            return value
         },
         remove: function (key) {
-            storage.removeItem(key);
+            storage.removeItem(key)
         }
     }
 }
 
-let variable = {};
+let variable = {}
 function createVariable() {
-    let storage = variable;
+    let storage = variable
     return {
         set: function (key, value) {
-            storage[key] = value;
+            storage[key] = value
         },
         get: function (key) {
             // 当对应的键不存在时, 返回值保持和`storage`一致。
             if (!(key in storage)) {
-                return NULL;
+                return NULL
             }
             return storage[key]
         },
         remove: function (key) {
-            delete storage[key];
+            delete storage[key]
         }
     }
 }
@@ -498,12 +433,68 @@ function isEmptyPlainObject(v) {
     return ret;
 }
 
+
+// try {
+//     localStorage.setItem(key, value);
+// } catch(e) {
+//     if (isQuotaExceeded(e)) {
+//         // Storage full, maybe notify user or do some clean-up
+//     }
+// }
+// ref: http://crocodillon.com/blog/always-catch-localstorage-security-and-quota-exceeded-errors
+function isQuotaExceeded(e) {
+    let quotaExceeded = false
+    if (e) {
+        if (e.code) {
+            switch (e.code) {
+                case 22:
+                    quotaExceeded = true
+                    break
+                case 1014:
+                    // Firefox
+                    if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                        quotaExceeded = true
+                    }
+                    break
+            }
+        } else if (e.number === -2147024882) {
+            // Internet Explorer 8
+            quotaExceeded = true
+        }
+    }
+    return quotaExceeded
+}
+
+
+function isSupportStorage() {
+    if (!hasWindow) {
+        return FALSE
+    }
+
+    if (typeof localStorage !== 'object') {
+        return FALSE
+    }
+
+    // 执行到这里，说明存在`storage`对象, 但, 有了也不一定能用!!! 比如隐身模式, 所以需要进一步验证
+    // `Safari`在隐身模式下会触发错误
+    let support = TRUE
+    try {
+        const a = '__nstest__'
+        localStorage.setItem(a, a)
+        support = localStorage.getItem(a) === a
+        localStorage.removeItem(a)
+    } catch (e) {
+        support = FALSE
+    }
+    return support
+}
+
 let nattyStorage = (options) => {
     return new Storage(options);
 }
 
-nattyStorage.version = VERSION;
-nattyStorage._variable = variable;
-nattyStorage.support = support;
+nattyStorage.version = '__VERSION__'
+nattyStorage._variable = variable
+nattyStorage.supportStorage = supportStorage
 
-module.exports = nattyStorage;
+export default nattyStorage

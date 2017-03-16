@@ -10,7 +10,7 @@ Storage plus for javascript!
 * 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生`localStorage/sessionStorage`对象，大大减少了代码量。
 * 封装了三种有效性判断，标记(`tag`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
 * 隐身模式下，有些浏览器不支持`localStorage`，此时自动降级为`variable`模式。
-* `gzip`后的只有`2.5K`。
+* `gzip`后的只有`2K`。
 
 ## Install
 
@@ -152,6 +152,21 @@ storage.remove()
 storage.destroy()
 ```
 
+## async[Set|Get|Has|Remove|Destroy]
+
+上面的`set`、`get`、`has`、`remove`、`destroy`方法都是同步的，同时还有一一对应的一套异步方法，`asyncSet`、`asyncSet`、`asyncHas`、`asyncRemove`、`asyncDestroy`，这些异步方法返回一个标准的`Promise`对象。
+
+```js
+ls.asyncSet('foo', 'x').then(() => {
+    ls.asyncGet().then(data => {
+        // data 值为 {"foo":"x"}
+    })
+})
+
+```
+
+
+
 ## storage.dump()
 
 在控制台输出当前缓存对象的所有数据，没有返回值。
@@ -169,7 +184,7 @@ storage.dump()
 
 ## nattyStorage.clean()
 
-清理掉浏览器`localStorage`中因超过`until`和`duration`的有效期而过期的数据。在`natty-storage`加载后，内部会自动执行一次。
+清理掉因为`until`和`duration`的有效期而过期的数据。在`natty-storage`加载后，内部会自动执行一次。
 
 示例
 

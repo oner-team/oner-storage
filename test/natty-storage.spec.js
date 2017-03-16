@@ -1,20 +1,6 @@
 // https://github.com/Automattic/expect.js
 document.getElementById('mode').innerHTML = nattyStorage.supportStorage ? 'localStorage可用' : 'localStorage不可用'
 
-const OneKB = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
-    'aaaaaaa'
-
 let count = 1
 const getId = function () {
     return count++
@@ -22,6 +8,7 @@ const getId = function () {
 
 const _describe = function () {}
 const _it = function (name, fn) {fn()}
+
 
 
 describe('nattyStorage v__VERSION__ Unit Test', function() {
@@ -35,7 +22,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
         })
     })
 
-    describe('sync `set/has` method', function () {
+    describe('`set/has` method', function () {
         let ls
 
         beforeEach('reset', function () {
@@ -87,7 +74,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     })
 
 
-    describe('sync `set/get` method', function () {
+    describe('`set/get` method', function () {
         let ls
 
         beforeEach('reset', function () {
@@ -101,15 +88,151 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             ls.destroy()
         })
 
-        it('`get` method without `key` argument should return all data', function () {
+        it('`get` method without `key|path` argument should return all data', function () {
             ls.set('foo', 'x')
 
             // 没有传入`path`，则返回整个缓存值
             expect(JSON.stringify(ls.get())).to.be('{"foo":"x"}')
         })
+
+        it('`get` method with `key`', function () {
+            ls.set('foo', 'x')
+
+            // 没有传入`path`，则返回整个缓存值
+            expect(ls.get('foo')).to.be('x')
+        })
+
+        it('`set` method with wrong `path`', function () {
+            ls.set('foo', 'x')
+
+            const errorSet = function () {
+                // 给字符串又设置了属性值 应该抛错
+                ls.set('foo.boo', 'y')
+            }
+            expect(errorSet).to.throwError()
+            // set出错以后 需要恢复原值
+            expect(JSON.stringify(ls.get())).to.be('{"foo":"x"}')
+        })
+
+        it('`get` method with `\\\\ path`', function () {
+            ls.set('x.y\\.y.z', 'x')
+
+            // 没有传入`path`，则返回整个缓存值
+            expect(ls.get('x.y\\.y.z')).to.be('x')
+        })
+
+        it('`set` method with `undefined` value', function () {
+            ls.set('foo', undefined)
+            // 此时
+            // `storage`里对应的值的"{}"
+            // 而`ls._data`的值是 {x: undefined}
+            // `JSON.stringify`会删除值为`undefined`的键
+            // 没有传入`path`，则返回整个缓存值
+            expect(JSON.stringify(ls.get())).to.be('{}')
+        })
     })
 
-    describe('validity checking', function() {
+    describe('`set/remove` method', function () {
+        let ls
+        const value = {
+            x: {
+                y: {
+                    z: 'z',
+                    zz: 'zz'
+                }
+            }
+        }
+
+        beforeEach('reset', function () {
+            ls = nattyStorage({
+                type: 'localStorage',
+                key: 'foo'
+            })
+        })
+
+        afterEach('clear', function () {
+            ls.destroy()
+        })
+
+        it('remove partial data by path', function() {
+            ls.set('foo', value)
+            ls.remove('foo.x.y.z')
+            expect(ls.get('foo.x.y.zz')).to.be('zz')
+        })
+
+        it('remove complete data by path', function () {
+            ls.set('foo', value)
+            ls.remove('foo.x.y')
+            expect(JSON.stringify(ls.get('foo.x'))).to.be('{}')
+        })
+
+        it('remove by a un-existed path', function () {
+            ls.set('foo', value)
+            ls.remove('foo.boo')
+            expect(JSON.stringify(ls.get('foo'))).to.be(JSON.stringify(value))
+        })
+
+        it('remove all data', function () {
+            ls.set('foo', value)
+            ls.remove()
+            expect(JSON.stringify(ls.get())).to.be('{}')
+        })
+    })
+    
+    describe('destroy', function () {
+        it('call method after `destroy` should throw error', function () {
+            const ls = nattyStorage({
+                type: 'localStorage',
+                key: 'foo'
+            })
+            ls.set('foo', 'x')
+            ls.destroy()
+
+            // 销毁之后就不能再调用任何方法了
+            const hasError = function () {
+                ls.get()
+            }
+            expect(hasError).to.throwError()
+        })
+    })
+
+    describe('`asyncSet/asyncGet` method', function () {
+        let ls
+
+        beforeEach('reset', function () {
+            ls = nattyStorage({
+                type: 'localStorage',
+                key: 'foo'
+            })
+        })
+
+        afterEach('clear', function () {
+            ls.destroy()
+        })
+
+        it('`asyncGet` method without `key` argument should return all data', function (done) {
+            ls.asyncSet('foo', 'x').then(() => {
+                // 没有传入`path`，则返回整个缓存值
+                ls.asyncGet().then(data => {
+                    expect(JSON.stringify(data)).to.be('{"foo":"x"}')
+                    done()
+                })
+            })
+        })
+
+        it('`asyncSet` method with wrong `path`', function (done) {
+            ls.set('foo', 'x')
+
+            // 给字符串又设置了属性值 应该抛错
+            ls.asyncSet('foo.boo', 'y').then(() => {}).catch(() => {
+                // set出错以后 需要恢复原值
+                expect(JSON.stringify(ls.get())).to.be('{"foo":"x"}')
+                done()
+            })
+        })
+    })
+
+    describe('valid checking', function() {
 
         it('`tag` checking: invalid', function(){
             const id = getId()
@@ -206,8 +329,9 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
         })
 
         it('`until` checking: invalid', function () {
-            const id = 'test-valid-until'
+            const id = 'until-invalid'
             const ls = nattyStorage({
+                type: 'localStorage',
                 key: id,
                 until: new Date(new Date().getTime() -1000).getTime() // 永远的上一秒
             })
@@ -215,6 +339,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             ls.set('foo', 'x')
 
             const ls2 = nattyStorage({
+                type: 'localStorage',
                 key: id
             })
 
@@ -224,8 +349,9 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
         })
 
         it('`until` checking: valid', function () {
-            const id = 'test-valid-until'
+            const id = 'until-valid'
             const ls = nattyStorage({
+                type: 'localStorage',
                 key: id,
                 until: new Date().getTime() + 1000*60*60
             })
@@ -233,6 +359,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             ls.set('x', 'x')
 
             const ls2 = nattyStorage({
+                type: 'localStorage',
                 key: id
             })
 
@@ -240,5 +367,58 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             ls.destroy()
             ls2.destroy()
         })
+    })
+
+    describe('clean', function () {
+        it('clean up `until` invalid storage', function () {
+
+            // 这是一个过期的缓存对象
+            const ls1 = nattyStorage({
+                type: 'localStorage',
+                key: 'clean',
+                until: new Date(new Date().getTime() -1000).getTime() // 永远的上一秒
+            })
+
+            ls1.set('foo', 'x')
+
+            // ls1的数据被清掉了
+            nattyStorage.clean()
+
+            // 不会有数据
+            const ls1next = nattyStorage({
+                type: 'localStorage',
+                key: 'clean-until',
+            })
+
+            expect(JSON.stringify(ls1next.get())).to.be('{}')
+            ls1next.destroy()
+        })
+
+        it('clean up `duration` invalid storage', function (done) {
+            // 这是一个过期的缓存对象
+            const ls1 = nattyStorage({
+                type: 'localStorage',
+                key: 'clean-duration',
+                duration: 100
+            })
+
+            ls1.set('foo', 'x')
+
+            // ls1的数据被清掉了
+            nattyStorage.clean()
+
+            setTimeout(function () {
+                // 不会有数据
+                const ls1next = nattyStorage({
+                    type: 'localStorage',
+                    key: 'clean-duration',
+                })
+                expect(JSON.stringify(ls1next.get())).to.be('{}')
+                ls1next.destroy()
+                done()
+            }, 300)
+        })
+
+
     })
 })

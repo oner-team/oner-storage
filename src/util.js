@@ -1,5 +1,6 @@
 
 export const hasWindow = 'undefined' !== typeof window;
+export const hasConsole = 'undefined' !== typeof console;
 const NULL = null
 
 /**
@@ -66,4 +67,4 @@ let _extend = (receiver = {}, supplier = {}) => {
 
 export const extend = redo(_extend)
 
-export const noop = () => {}
+export const noop = function () {}

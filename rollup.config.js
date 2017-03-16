@@ -109,7 +109,7 @@ function build(isUgly) {
             dest: distFile,
             moduleName: 'nattyStorage',
             sourceMap: true,
-            banner: '/*! ' + distFile.substr(5) + ' v' + pkg.version + ' | MIT License | https://github.com/jias/natty-storage */',
+            banner: '/*! ' + distFile.substr(5) + ' v' + pkg.version + ' | MIT License | fushan | https://github.com/jias/natty-storage */',
         })
     })
 }

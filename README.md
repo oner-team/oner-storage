@@ -63,14 +63,14 @@ storage.set('foo', 'x')
 storage.set('boo.y', 'y')
 ```
 
-## storage.get(path, [defaultValue])
+## storage.get(path, [fallbackValue])
 
 获取缓存对象上存储的数据。返回指定路径下对应的值。
 
 参数
 
 - path {String} 必选。键或路径。路径可以用`.`分割。
-- defaultValue {Any} 可选。当指定的路径没有对应的值时，如果指定了该参数，则返回这个参数。
+- fallbackValue {Any} 可选。当指定的路径没有对应的值时，如果指定了该参数，则返回这个参数。
 
 示例
 

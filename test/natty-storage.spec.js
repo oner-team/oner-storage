@@ -9,8 +9,6 @@ const getId = function () {
 const _describe = function () {}
 const _it = function (name, fn) {fn()}
 
-
-
 describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     describe('static', function () {
@@ -100,6 +98,18 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
             // 没有传入`path`，则返回整个缓存值
             expect(ls.get('foo')).to.be('x')
+        })
+
+        it('`get` a false like value', function () {
+            ls.set('foo', 0)
+
+            // 没有传入`path`，则返回整个缓存值
+            expect(ls.get('foo')).to.be(0)
+        })
+
+        it('`get` with fallback value', function () {
+            // 没有传入`path`，则返回整个缓存值
+            expect(ls.get('foo', 'x')).to.be('x')
         })
 
         it('`set` method with wrong `path`', function () {

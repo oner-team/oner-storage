@@ -142,7 +142,7 @@ class Storage {
     // instance.get()
     // instance.get('foo')
     // instance.get('foo.bar')
-    get(path) {
+    get(path, fallbackValue) {
         if (!this._data) {
             this._lazyInit()
         }
@@ -159,7 +159,7 @@ class Storage {
             throw new Error(e)
         }
 
-        return data
+        return data !== UNDEFINED ? data : fallbackValue
     }
 
     // 返回指定的路径是否有值
@@ -236,7 +236,7 @@ class Storage {
     }
 }
 
-// 添加异步方法
+// 添加异步方法：asyncSet asyncGet asyncHas asyncRemove asyncDestroy
 const methodHasAsyncMode = ['set', 'get', 'has', 'remove', 'destroy']
 for (let i=0, l=methodHasAsyncMode.length; i<l; i++) {
     let method = methodHasAsyncMode[i]
@@ -459,5 +459,8 @@ nattyStorage.list = function () {
         hasConsole && console.log(storage.config.type, storage.config.key, storage.get())
     })
 }
+
+// 内置处理一次过期数据
+nattyStorage.clean()
 
 export default nattyStorage

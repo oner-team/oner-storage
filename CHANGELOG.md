@@ -2,8 +2,8 @@
 
 #### v2.0.0 / 2017-03-16
 
-* 删除了创建缓存实例时的`async`参数，现在一个缓存实例可以同时使用同步和异步方法。
-* 缓存实例添加了一套异步方法，`asyncSet`、`asyncSet`、`asyncHas`、`asyncRemove`、`asyncDestroy`。
+* 删除了创建缓存对象时的`async`参数，现在一个缓存对象可以同时使用同步和异步方法。
+* 缓存对象添加了一套异步方法，`asyncSet`、`asyncSet`、`asyncHas`、`asyncRemove`、`asyncDestroy`。
 * 添加了`nattyStorage.clean`方法，清理掉因为`until`和`duration`的有效期而过期的数据。
 * `nattyStorage.list`方法，方便开发时调试。
 * `nattyStorage.each`方法，方便自定义处理所有缓存对象。

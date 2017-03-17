@@ -6,10 +6,13 @@ Storage plus for javascript!
 
 ## Features
 
-* 支持异步方式使用`localStorage`和`sessionStorage`，避免阻塞，并优雅地捕获异常(如超出浏览器最大限制)。当然，同步方式使用依然是默认的使用方式。
-* 支持以路径(`Path`)方式设置、获取和删除数据，相对于直接使用原生`localStorage/sessionStorage`对象，大大减少了代码量。
+* 较直接使用浏览器原生`localStorage`对象，`natty-storage`在性能上做了很多改进。
+  - 只有`set`和`remove`方法，才真正调用了原生`localStorage`对象。`get`和`has`方法，根本没有调用。
+  - 进一步，`set`和`remove`方法只调用一次原生`localStorage`对象(如果直接使用浏览器原生`localStorage`对象，先从`localStorage`中取出数据，然后修改数据，最后再存入`localStorage`)。
+* `set`、`get`、`has`和`remove`方法都支持`path`参数，相对于直接使用原生`localStorage/sessionStorage`对象，大大减少了代码量。
+* 同步和异步方法同时支持。`set/asyncSet`、`get/asyncGet`、`has/asyncHas`、`remove/asyncRemove`和`destroy/asyncDestroy`。
 * 封装了三种有效性判断，标记(`tag`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
-* 隐身模式下，有些浏览器不支持`localStorage`，此时自动降级为`variable`模式。
+* 隐身模式下，有些浏览器不支持`localStorage`和`sessionStorage`，此时自动降级为`variable`模式。
 * `gzip`后的只有`2K`。
 
 ## Install

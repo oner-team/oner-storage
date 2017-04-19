@@ -38,9 +38,7 @@ export const isPlainObject = v => {
 }
 
 const ARRAY_TYPE = '[object Array]'
-export const isArray = v => {
-    return toString.call(v) === ARRAY_TYPE
-}
+export const isArray = Array.isArray || (v => Object.prototype.toString.call(v) === ARRAY_TYPE)
 
 /**
  * 对象扩展

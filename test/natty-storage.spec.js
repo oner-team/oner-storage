@@ -140,6 +140,24 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             // 没有传入`path`，则返回整个缓存值
             expect(JSON.stringify(ls.get())).to.be('{}')
         })
+
+        it(`setting non-string for the key, should throw error`, function () {
+            const foo = nattyStorage({
+                type: 'variable',
+                key: 'foo'
+            })
+
+            const hasErrorFn = function () {
+              ls.set(true, {
+                  dev: true,
+                  pro: false
+              })
+            }
+
+            expect(hasErrorFn).to.throwError()
+
+            foo.destroy()
+        })
     })
 
     describe('`set/remove` method', function () {
@@ -188,7 +206,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
             expect(JSON.stringify(ls.get())).to.be('{}')
         })
     })
-    
+
     describe('destroy', function () {
         it('call method after `destroy` should throw error', function () {
             const ls = nattyStorage({

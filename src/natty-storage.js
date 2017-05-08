@@ -109,16 +109,19 @@ class Storage {
     }
 
     // 同步设置数据
-    // @param path {Any} optional 要设置的值的路径 或 要设置的完整值
+    // @param path {String} optional 要设置的值的路径 或 要设置的完整值
     // @param value {Any} 要设置的值
     set(path, data) {
         if (!this._data) {
             this._lazyInit()
         }
 
+        if (typeof path !== 'string') {
+            throw new Error(`The first argument for set() must be a string. Invalid: ${path}`)
+        }
+
         // step1: 备份数据
         this._backupData = this._data
-
 
         try {
             // step2: 更新`this._data`

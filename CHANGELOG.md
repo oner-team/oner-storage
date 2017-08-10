@@ -1,6 +1,6 @@
 ## Change log
 
-#### v2.1.0 / 2017-08-09
+#### v2.1.0 / 2017-08-10
 
 * 添加[`nattyStorage.env`](https://github.com/jias/natty-storage#nattystorageenvenv-hash)方法。
 * 针对多级路径的取值性能做的进一步优化。多次调用`storage.get('ni.hao.shi.jie')`时，不会多次拆分`path`并递归取值。

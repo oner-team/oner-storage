@@ -68,3 +68,12 @@ let _extend = (receiver = {}, supplier = {}) => {
 export const extend = redo(_extend)
 
 export const noop = function () {}
+
+const chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678'
+export const randomString = (n = 32) => {
+  let str = ''
+  for (let i = 0; i < n; i += 1) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return str
+}

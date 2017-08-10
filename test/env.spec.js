@@ -1,0 +1,60 @@
+const _describe = function () {}
+const _it = function (name, fn) {fn()}
+
+describe('nattyStorage.env', function() {
+
+  it('get value by env', function () {
+    const storage = nattyStorage({
+      type: 'variable',
+      key: 'config',
+    })
+
+    // 使用场景下这个值不是写死的，是运行环境的值
+    const NODE_ENV = 'development'
+
+    storage.set('api', nattyStorage.env(NODE_ENV, {
+      development: 'http://0.0.0.0/api',
+      production: 'http://foo.com/api',
+    }))
+
+    expect(storage.get('api')).to.be('http://0.0.0.0/api')
+  })
+
+  it('get `undefined` by env', function () {
+    const storage = nattyStorage({
+      type: 'variable',
+      key: 'config',
+    })
+
+    // 使用场景下这个值不是写死的，是运行环境的值
+    const NODE_ENV = 'test'
+
+    storage.set('api', nattyStorage.env(NODE_ENV, {
+      development: 'http://0.0.0.0/api',
+      production: 'http://foo.com/api',
+    }))
+
+    expect(storage.get('api')).to.be(undefined)
+  })
+
+  it('can not set value on env instance', function () {
+    const storage = nattyStorage({
+      type: 'variable',
+      key: 'config',
+    })
+
+    // 使用场景下这个值不是写死的，是运行环境的值
+    const NODE_ENV = 'production'
+
+    storage.set('foo.api', nattyStorage.env(NODE_ENV, {
+      development: 'http://0.0.0.0/api',
+      production: 'http://foo.com/api'
+    }))
+
+    // `env`对象不是`PlantObject`节点，所以不能有下层`path`，继续赋值会抛错
+    const hasErrorFn = () => {
+      storage.set('foo.api.test', 'hello')
+    }
+    expect(hasErrorFn).to.throwError()
+  })
+})

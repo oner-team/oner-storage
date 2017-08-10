@@ -21,20 +21,16 @@ Storage plus for javascript!
 npm install natty-storage --save
 ```
 
-## nattyStorage(options)
+## const storage = nattyStorage(options)
 
 创建缓存对象
 
-参数
+参数 `options {Object}`
 
 - type {String} 可选。指定缓存对象存储数据的方式，可选值为`localStorage`、`sessionStorage`和`variable`。默认为`variable `。注意：当指定`type`的值为`localStorage/sessionStorage`，但浏览器的`localStorage/sessionStorage`不可用时(比如`Safari`浏览器的隐身模式)，会自动降级到`varable`方式存储。
-
-- key {String} 必选。指定缓存对象存储数据所使用的唯一标识。如果两个缓存对象的`key`值相同，则缓存的数据也是相同的。
-
+- key {String} <span style="color:red">必选</span>。指定缓存对象存储数据所使用的唯一标识。如果两个缓存对象的`key`值相同，则缓存的数据也是相同的。
 - tag {String} 可选。用于验证数据有效性的标识(之一)。通过一个标记来判断缓存对象所存储的数据是否有效。`tag`不同则缓存失效。通常`tag`值是一个字符串标识，比如版本号。
-
 - duration {Number} 可选。单位为毫秒。用于验证数据有效性的标识(之二)。通过"有效期长"来判断缓存对象所存储的数据是否有效。过期则缓存失效，不过期则顺延。
-
 - `until` {Number} 可选。值为13位长度的时间戳。用于验证数据有效性的标识(之三)。通过"有效期至"来判断缓存对象所存储的数据是否有效。过期则缓存失效。
 
 
@@ -155,7 +151,7 @@ storage.remove()
 storage.destroy()
 ```
 
-## async[Set|Get|Has|Remove|Destroy]
+## storage.async[Set|Get|Has|Remove|Destroy]
 
 上面的`set`、`get`、`has`、`remove`、`destroy`方法都是同步的，同时还有一一对应的一套异步方法，`asyncSet`、`asyncSet`、`asyncHas`、`asyncRemove`、`asyncDestroy`，这些异步方法返回一个标准的`Promise`对象。
 
@@ -218,6 +214,44 @@ nattyStorage.list = function () {
         hasConsole && console.log(storage.config.type, storage.config.key, storage.get())
     })
 }
+```
+
+# nattyStorage.env(env, hash)
+
+创建一个`env`对象，该对象也可以直接作为节点的值。
+
+`env`对象的特点：
+
+- `env`对象一旦创建，它对应的值(就是创建时`env`对应的值)就不可再更改。
+- `env`对象取值的唯一方式是调用`get`方法。
+- `env`在`nattyStorage`不能再添加子节点。
+
+参数
+
+- env {String} 必选。当前的环境变量。
+- hash {Object} 必选。所有环境变量对应的值。
+
+示例：
+
+
+```js
+// 这个`demo`应用在`node`层，`type`设置为`variable`
+const storage = nattyStorage({
+  key: 'demo',
+  type: 'variable'
+})
+
+// 设置`server`端的统一`api`前缀
+storage.set('apiPrefix', nattyStorage.env(process.env.NODE_ENV, {
+  development: 'http://0.0.0.0/api',
+  production: 'http://foo.com/api',
+}))
+
+// 如果`process.env.NODE_ENV`为`production`
+storage.get('apiPrefix') // => 'http://foo.com/api'
+
+// 给`apiPrefix`再添加子节点是不允许的，下面一句将报错。
+storage.set('apiPrefix.foo', 'hello')
 ```
 
 

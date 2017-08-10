@@ -57,4 +57,34 @@ describe('nattyStorage.env', function() {
     }
     expect(hasErrorFn).to.throwError()
   })
+
+  it('env can not be used for localStorage', function () {
+    const storage = nattyStorage({
+      type: 'localStorage',
+      key: 'config',
+    })
+
+    const hasErrorFn = () => {
+      storage.set('api', nattyStorage.env('development', {
+        development: 'http://0.0.0.0/api',
+      }))
+    }
+
+    expect(hasErrorFn).to.throwError()
+  })
+
+  it('env can not be used for sessionStorage', function () {
+    const storage = nattyStorage({
+      type: 'sessionStorage',
+      key: 'config',
+    })
+
+    const hasErrorFn = () => {
+      storage.set('api', nattyStorage.env('development', {
+        development: 'http://0.0.0.0/api',
+      }))
+    }
+
+    expect(hasErrorFn).to.throwError()
+  })
 })

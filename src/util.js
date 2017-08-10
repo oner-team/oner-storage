@@ -1,7 +1,8 @@
 
-export const hasWindow = 'undefined' !== typeof window;
-export const hasConsole = 'undefined' !== typeof console;
+export const hasWindow = 'undefined' !== typeof window
+export const hasConsole = 'undefined' !== typeof console
 const NULL = null
+const toString = Object.prototype.toString
 
 /**
  * 变换两个参数的函数到多个参数
@@ -21,7 +22,7 @@ const redo = fn => {
 		}
 		return ret
 	}
-};
+}
 
 const OBJECT = 'object'
 const isObject = v => {
@@ -62,8 +63,8 @@ let _extend = (receiver = {}, supplier = {}) => {
             }
         }
     }
-    return receiver;
-};
+    return receiver
+}
 
 export const extend = redo(_extend)
 

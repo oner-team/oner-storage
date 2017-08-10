@@ -119,6 +119,11 @@ class Storage {
       this._lazyInit()
     }
 
+    // `env`只能用于`type`为`variable`的场景
+    if (this.config.type !== 'variable' && isEnv(data)) {
+      throw new Error(`'env' value can NOT be used for 'type: ${this.config.type}'`)
+    }
+
     if (typeof path !== 'string') {
       throw new Error(`The first argument for set() must be a string. Invalid: ${path}`)
     }
@@ -179,6 +184,15 @@ class Storage {
     this._fastCache[path] = data
 
     return data
+  }
+
+  // 如果取到的值是`undefined`，会抛出错误
+  sure(path) {
+    const value = this.get(path)
+    if (value === UNDEFINED) {
+      throw new Error(`Unexpected undefined value returned by path '${path}'`)
+    }
+    return value
   }
 
   // 返回指定的路径是否有值

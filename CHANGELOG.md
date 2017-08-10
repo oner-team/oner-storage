@@ -1,5 +1,10 @@
 ## Change log
 
+#### v2.2.1
+
+* 修复[#53](https://github.com/jias/natty-fetch/issues/53)
+* 添加`sure`方法。
+
 #### v2.1.0 / 2017-08-10
 
 * 添加[`nattyStorage.env`](https://github.com/jias/natty-storage#nattystorageenvenv-hash)方法。

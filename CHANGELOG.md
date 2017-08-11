@@ -2,8 +2,8 @@
 
 #### v2.2.1
 
-* 修复[#53](https://github.com/jias/natty-fetch/issues/53)
-* 添加`sure`方法。
+* 旧疾复发！[MagicCube](https://github.com/MagicCube) in [#53](https://github.com/jias/natty-fetch/issues/53)。
+* 添加[`sure`](https://github.com/jias/natty-storage#storagesurepath)方法。
 
 #### v2.1.0 / 2017-08-10
 

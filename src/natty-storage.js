@@ -9,7 +9,7 @@ const UNDEFINED = undefined
 const supportStorage = isSupportStorage()
 
 // 全局默认配置
-let defaultGlobalConfig = {
+const defaultGlobalConfig = {
   // localStorage, sessionStorage, variable
   type: 'variable',
 
@@ -93,7 +93,6 @@ class Storage {
   // 判断当前`key`的`storage`是否已经过期
   // @returns {boolean}
   isOutdated() {
-
     if (this.config.tag && this.config.tag !== this._checkData.tag) {
       return TRUE
     }
@@ -342,7 +341,7 @@ function splitPathToKeys (path) {
     ret = path.split('.')
   } else {
     ret = reserveString(path).split(/\.(?!\\)/).reverse()
-    for (var i=0, l=ret.length; i<l; i++) {
+    for (let i=0, l=ret.length; i<l; i++) {
       ret[i] = reserveString(ret[i].replace(/\.\\/g, '.'))
     }
   }
@@ -455,7 +454,7 @@ function isSupportStorage() {
   return support
 }
 
-const nattyStorage = (options) => {
+const nattyStorage = options => {
   return new Storage(options)
 }
 
@@ -475,7 +474,7 @@ nattyStorage.each = function (fn = noop) {
 
   for (let type in map) {
     for (let key in map[type]) {
-      if (key.indexOf('NSCheck:') > -1) {
+      if (map[type].hasOwnProperty(key) && key.indexOf('NSCheck:') > -1) {
         let storage = nattyStorage({
           key: key.match(/NSCheck:(.*)/)[1],
           type: type,
@@ -488,7 +487,7 @@ nattyStorage.each = function (fn = noop) {
 
 // 清理localStorage中过期的缓存
 nattyStorage.clean = function () {
-  this.each(function (storage) {
+  this.each(storage => {
     if (storage.isOutdated()) {
       storage.destroy()
     }
@@ -496,7 +495,7 @@ nattyStorage.clean = function () {
 }
 
 nattyStorage.list = function () {
-  this.each(function (storage) {
+  this.each(storage => {
     hasConsole && console.log(storage.config.type, storage.config.key, storage.get())
   })
 }

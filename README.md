@@ -96,17 +96,18 @@ storage.get('zero', 'x') // => 0
 
 ## storage.sure(path)
 
-获取缓存对象上存储的数据。返回指定路径下对应的值。
+作用同`storage.get`，区别在于如果取到的值是`undefined`，会抛错。而且该方法不支持`fallbackValue`参数。应用于必须设置值的场景(如：项目的配置文件中，必须指定数据接口`URL`地址)，在项目的开发过程中就及时反馈丢失的配置。
 
 参数
 
 - path {String} 必选。键或路径。路径可以用`.`分割。
-- fallbackValue {Any} 可选。当指定的路径没有对应的值时，如果指定了该参数，则返回这个参数。
 
 示例
 
 ```js
-
+// 如果'server.apiPrefix'值没有配置，则调用sure会看见：
+// Unexpected undefined value returned by path 'server.apiPrefix'
+storage.sure('server.apiPrefix')
 ```
 
 ## storage.has(path)

@@ -93,6 +93,22 @@ storage.set('zero', 0)
 storage.get('zero', 'x') // => 0
 ```
 
+
+## storage.sure(path)
+
+获取缓存对象上存储的数据。返回指定路径下对应的值。
+
+参数
+
+- path {String} 必选。键或路径。路径可以用`.`分割。
+- fallbackValue {Any} 可选。当指定的路径没有对应的值时，如果指定了该参数，则返回这个参数。
+
+示例
+
+```js
+
+```
+
 ## storage.has(path)
 
 判断指定路径的数据在缓存对象中是否存在。

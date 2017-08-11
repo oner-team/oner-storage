@@ -1,4 +1,3 @@
-
 export const hasWindow = 'undefined' !== typeof window
 export const hasConsole = 'undefined' !== typeof console
 const NULL = null
@@ -9,38 +8,36 @@ const toString = Object.prototype.toString
  * @param  {Function} fn 基函数
  * @return {Function} 变换后的函数
  * @demo
- *      function add(x, y) { return x+y; }
- *      add = redo(add);
- *      add(1,2,3) => 6
+ *    function add(x, y) { return x+y; }
+ *    add = redo(add);
+ *    add(1,2,3) => 6
  */
-const redo = fn => {
-	return function() {
-		const args = arguments
-		let ret = fn(args[0], args[1])
-		for (let i = 2, l = args.length; i < l; i++) {
-			ret = fn(ret, args[i])
-		}
-		return ret
-	}
+const redo = fn => function() {
+  const args = arguments
+  let ret = fn(args[0], args[1])
+  for (let i = 2, l = args.length; i < l; i++) {
+    ret = fn(ret, args[i])
+  }
+  return ret
 }
 
 const OBJECT = 'object'
 const isObject = v => {
-	return typeof v === OBJECT && v !== NULL
+  return typeof v === OBJECT && v !== NULL
 }
 
 const isWindow = v => {
-	return v !== NULL && v === v.window
+  return v !== NULL && v === v.window
 }
 
 // 参考了zepto
 export const isPlainObject = v => {
-	return v !== NULL && isObject(v) && !isWindow(v) && Object.getPrototypeOf(v) === Object.prototype
+  return v !== NULL && isObject(v) && !isWindow(v) && Object.getPrototypeOf(v) === Object.prototype
 }
 
 const ARRAY_TYPE = '[object Array]'
 export const isArray = v => {
-    return toString.call(v) === ARRAY_TYPE
+  return toString.call(v) === ARRAY_TYPE
 }
 
 /**
@@ -51,19 +48,19 @@ export const isArray = v => {
  * @note 这个extend方法是定制的, 不要拷贝到其他地方用!!!
  */
 let _extend = (receiver = {}, supplier = {}) => {
-    for (let key in supplier) {
-        // `supplier`中不是未定义的键 都可以执行扩展
-        if (supplier.hasOwnProperty(key) && supplier[key] !== undefined) {
-            if (isArray(supplier[key])) {
-                receiver[key] = [].concat(supplier[key]);
-            } else if (isPlainObject(supplier[key])) {
-                receiver[key] = _extend({}, supplier[key]);
-            } else {
-                receiver[key] = supplier[key];
-            }
-        }
+  for (let key in supplier) {
+    // `supplier`中不是未定义的键 都可以执行扩展
+    if (supplier.hasOwnProperty(key) && supplier[key] !== undefined) {
+      if (isArray(supplier[key])) {
+        receiver[key] = [].concat(supplier[key])
+      } else if (isPlainObject(supplier[key])) {
+        receiver[key] = _extend({}, supplier[key])
+      } else {
+        receiver[key] = supplier[key]
+      }
     }
-    return receiver
+  }
+  return receiver
 }
 
 export const extend = redo(_extend)

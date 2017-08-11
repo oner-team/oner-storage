@@ -23,7 +23,7 @@ let defaultGlobalConfig = {
   duration: 0,
 
   // 有效期至, 时间戳
-  until: 0
+  until: 0,
 }
 
 class Storage {
@@ -86,7 +86,7 @@ class Storage {
       tag: this.config.tag,
       lastUpdate: this._createStamp,
       duration: this.config.duration,
-      until: this.config.until
+      until: this.config.until,
     })
   }
 
@@ -208,10 +208,10 @@ class Storage {
 
     return hasValueByPath(path, this._data) ? {
       has: TRUE,
-      value: getValueByPath(path, this._data)
+      value: getValueByPath(path, this._data),
     } : {
       has: FALSE,
-      value: UNDEFINED
+      value: UNDEFINED,
     }
   }
 
@@ -302,12 +302,13 @@ function createStorage(storage) {
       try {
         value = JSON.parse(value)
       } catch (e) {
+        hasConsole && console.log(e)
       }
       return value
     },
     remove: function (key) {
       storage.removeItem(key)
-    }
+    },
   }
 }
 
@@ -327,7 +328,7 @@ function createVariable() {
     },
     remove: function (key) {
       delete storage[key]
-    }
+    },
   }
 }
 
@@ -336,7 +337,7 @@ function reserveString (str) {
 }
 
 function splitPathToKeys (path) {
-  var ret
+  let ret
   if (path.indexOf('\\.') === -1) {
     ret = path.split('.')
   } else {
@@ -362,7 +363,9 @@ function setValueByPath(path, value, data) {
         bottomData[key] = value
       } else {
         const nonPlainObjectPath = path.replace(new RegExp('\\.' + key + '$'), '')
+        /* eslint-disable */
         throw new Error(`Cannot create property '${key}' on '${nonPlainObjectPath}'(non-plain-object) node: ${isEnv(bottomData) ? bottomData.get() : bottomData}`)
+        /* eslint-enable */
       }
     }
   }
@@ -462,7 +465,7 @@ nattyStorage.supportStorage = supportStorage
 
 nattyStorage.each = function (fn = noop) {
   const map = {
-    variable: nattyStorage._variable
+    variable: nattyStorage._variable,
   }
 
   if (supportStorage) {
@@ -475,7 +478,7 @@ nattyStorage.each = function (fn = noop) {
       if (key.indexOf('NSCheck:') > -1) {
         let storage = nattyStorage({
           key: key.match(/NSCheck:(.*)/)[1],
-          type: type
+          type: type,
         })
         fn(storage)
       }

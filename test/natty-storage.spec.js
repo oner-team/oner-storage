@@ -6,8 +6,8 @@ const getId = function () {
   return count++
 }
 
-const _describe = function () {}
-const _it = function (name, fn) {fn()}
+// const _describe = function () {}
+// const _it = function (name, fn) {fn()}
 
 describe('nattyStorage v__VERSION__ Unit Test', function() {
 
@@ -26,7 +26,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     beforeEach('reset', function () {
       ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
     })
 
@@ -78,7 +78,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     beforeEach('reset', function () {
       ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
     })
 
@@ -144,13 +144,13 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     it(`setting non-string for the key, should throw error`, function () {
       const foo = nattyStorage({
         type: 'variable',
-        key: 'foo'
+        key: 'foo',
       })
 
       const hasErrorFn = function () {
         ls.set(true, {
           dev: true,
-          pro: false
+          pro: false,
         })
       }
 
@@ -164,7 +164,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     it('throw error when get undefined', function () {
       const ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
 
       const hasErrorFn = () => {
@@ -181,15 +181,15 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       x: {
         y: {
           z: 'z',
-          zz: 'zz'
-        }
-      }
+          zz: 'zz',
+        },
+      },
     }
 
     beforeEach('reset', function () {
       ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
     })
 
@@ -226,7 +226,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     it('call method after `destroy` should throw error', function () {
       const ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
       ls.set('foo', 'x')
       ls.destroy()
@@ -245,7 +245,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     beforeEach('reset', function () {
       ls = nattyStorage({
         type: 'localStorage',
-        key: 'foo'
+        key: 'foo',
       })
     })
 
@@ -282,7 +282,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id, // 保证之前不存在
-        tag: '1.0'
+        tag: '1.0',
       })
 
       ls.set('foo', 'x')
@@ -291,7 +291,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls2 = nattyStorage({
         type: 'localStorage',
         key: id, // 保证之前存在
-        tag: '2.0'
+        tag: '2.0',
       })
 
       expect(JSON.stringify(ls2.get())).to.be('{}')
@@ -304,7 +304,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id, // 保证之前不存在
-        tag: '1.0'
+        tag: '1.0',
       })
 
       ls.set('foo', 'x')
@@ -313,7 +313,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls2 = nattyStorage({
         type: 'localStorage',
         key: id, // 保证之前存在
-        tag: '1.0'
+        tag: '1.0',
       })
 
       expect(ls2.get('foo')).to.be('x')
@@ -326,7 +326,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id,
-        duration: 200
+        duration: 200,
       })
 
       ls.set('foo', 'x')
@@ -336,7 +336,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
         const ls2 = nattyStorage({
           type: 'localStorage',
           key: id,
-          duration: 200
+          duration: 200,
         })
 
         try {
@@ -355,7 +355,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id,
-        duration: 200
+        duration: 200,
       })
 
       ls.set('foo', 'x')
@@ -363,7 +363,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls2 = nattyStorage({
         type: 'localStorage',
         key: id,
-        duration: 200
+        duration: 200,
       })
 
       expect(ls2.get().foo).to.be('x')
@@ -376,14 +376,14 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id,
-        until: new Date(new Date().getTime() -1000).getTime() // 永远的上一秒
+        until: new Date(new Date().getTime() -1000).getTime(), // 永远的上一秒
       })
 
       ls.set('foo', 'x')
 
       const ls2 = nattyStorage({
         type: 'localStorage',
-        key: id
+        key: id,
       })
 
       expect(JSON.stringify(ls2.get())).to.be('{}')
@@ -396,14 +396,14 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls = nattyStorage({
         type: 'localStorage',
         key: id,
-        until: new Date().getTime() + 1000*60*60
+        until: new Date().getTime() + 1000*60*60,
       })
 
       ls.set('x', 'x')
 
       const ls2 = nattyStorage({
         type: 'localStorage',
-        key: id
+        key: id,
       })
 
       expect(JSON.stringify(ls2.get())).to.be('{"x":"x"}')
@@ -419,7 +419,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls1 = nattyStorage({
         type: 'localStorage',
         key: 'clean',
-        until: new Date(new Date().getTime() -1000).getTime() // 永远的上一秒
+        until: new Date(new Date().getTime() -1000).getTime(), // 永远的上一秒
       })
 
       ls1.set('foo', 'x')
@@ -442,7 +442,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       const ls1 = nattyStorage({
         type: 'localStorage',
         key: 'clean-duration',
-        duration: 100
+        duration: 100,
       })
 
       ls1.set('foo', 'x')

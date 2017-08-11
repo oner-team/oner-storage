@@ -1,5 +1,5 @@
-const _describe = function () {}
-const _it = function (name, fn) {fn()}
+// const _describe = function () {}
+// const _it = function (name, fn) {fn()}
 
 describe('nattyStorage.env', function() {
 
@@ -48,7 +48,7 @@ describe('nattyStorage.env', function() {
 
     storage.set('foo.api', nattyStorage.env(NODE_ENV, {
       development: 'http://0.0.0.0/api',
-      production: 'http://foo.com/api'
+      production: 'http://foo.com/api',
     }))
 
     // `env`对象不是`PlantObject`节点，所以不能有下层`path`，继续赋值会抛错

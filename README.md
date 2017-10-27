@@ -2,6 +2,9 @@
 
 Storage plus for javascript!
 
+
+[![npm version](https://img.shields.io/npm/v/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![download](https://img.shields.io/npm/dm/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/jias/natty-storage/master/LICENSE)
+
 开发者的体验至关重要！ `natty`系列的小工具，在微小的技术点上追求极致的开发体验。如果对你有帮助，请`Star`支持一下，感谢 :D
 
 ## Features

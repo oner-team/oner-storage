@@ -20,6 +20,42 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     })
   })
 
+  describe('`data/set/get` method', function () {
+    let ls
+
+    beforeEach('reset', function () {
+      ls = nattyStorage({
+        type: 'localStorage',
+        key: 'foo',
+      })
+    })
+
+    afterEach('clear', function () {
+      ls.destroy()
+    })
+
+    it('`data` method, then get value', function () {
+      ls.data({
+        'foo': 'x',
+      })
+
+      expect(ls.get('foo')).to.be('x')
+      expect(JSON.stringify(ls.get())).to.be('{"foo":"x"}')
+    })
+
+    it('`data` method + `set` method，then get value', function () {
+      ls.data({
+        'foo': 'x',
+      })
+
+      ls.set('bar.y', 'y')
+
+      expect(ls.get('bar.y')).to.be('y')
+      console.log('JSON.stringify(ls.get())', JSON.stringify(ls.get()))
+      expect(JSON.stringify(ls.get())).to.be('{"foo":"x","bar":{"y":"y"}}')
+    })
+  })
+
   describe('`set/has` method', function () {
     let ls
 

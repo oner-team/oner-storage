@@ -1,11 +1,13 @@
 # natty-storage
 
-Storage plus for javascript!
-
 
 [![npm version](https://img.shields.io/npm/v/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![download](https://img.shields.io/npm/dm/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/jias/natty-storage/master/LICENSE)
 
-开发者的体验至关重要！ `natty`系列的小工具，在微小的技术点上追求极致的开发体验。如果对你有帮助，请`Star`支持一下，感谢 :D
+Storage plus for javascript!
+
+> 🍻 开发者的体验至关重要！ `natty`系列的小工具，在微小的技术点上追求极致的开发体验。如果对你有帮助，请`Star`支持一下，感谢 :D
+
+> 🍟 `natty-fetch`中创建[灵活的多层级接口](https://github.com/jias/natty-fetch/blob/master/docs/clear_api.md)的实现，就是借助`natty-storage`实现的。
 
 ## Features
 
@@ -49,9 +51,28 @@ const storage = nattyStorage({
 })
 ```
 
+
+## storage.data(data)
+
+把指定的`plain object`对象设置为缓存对象的值。
+
+> 注意：`storage.data`方法是整体设置缓存数据，而下面的`storage.set`方法是以键或路径的方式设置数据，要根据具体场景来选择合适的方法。
+
+参数
+
+- data {Plain Object} 必选。要设置为值的对象。
+
+示例
+
+```js
+storage.data({'foo': 'x'}})
+storage.get('foo') // => 'x'
+storage.get() // => {"foo":"x"}
+```
+
 ## storage.set(path, value)
 
-在缓存对象上存储数据，没有返回值。
+以键或路径的方式在缓存对象上存储数据，没有返回值。
 
 参数
 

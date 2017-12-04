@@ -110,6 +110,37 @@ class Storage {
     return FALSE
   }
 
+  // 把指定的`plain object`对象设置为`storage`的值
+  data(data) {
+    if (!this._data) {
+      this._lazyInit()
+    }
+
+    if (!isPlainObject(data)) {
+      throw new Error(`The argument for data() must be a plain object. Invalid: ${data}`)
+    }
+
+    // 整体设置，置空缓存
+    this._fastCache = {}
+
+    // step1: 备份数据
+    this._backupData = this._data
+
+    try {
+      // step2: 更新`this._data`
+      this._data = data
+
+      // step3: 将`this._data`存储到`storage`中
+      this._storage.set(this._DATA_KEY, this._data)
+    } catch (e) {
+      // 如果存储失败了，恢复原有数据
+      // 保持`this._data`和`storage`中的值同步，是最基本的功能
+      this._storage.set(this._DATA_KEY, this._data = this._backupData)
+
+      throw new Error(e)
+    }
+  }
+
   // 同步设置数据
   // @param path {String} optional 要设置的值的路径 或 要设置的完整值
   // @param value {Any} 要设置的值

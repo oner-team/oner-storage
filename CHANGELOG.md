@@ -3,7 +3,7 @@
 
 #### v2.2.0 / 2017-12-04
 
-* 添加[`data`](https://github.com/jias/natty-storage#storagedatapath)方法, 把指定的`plain object`对象设置为`storage`的值。
+* 添加[`data`](https://github.com/jias/natty-storage#storagedatadata)方法, 把指定的`plain object`对象设置为`storage`的值。
 
 #### v2.1.1 / 2017-08-10
 

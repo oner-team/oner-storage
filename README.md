@@ -11,14 +11,17 @@ Storage plus for javascript!
 
 ## Features
 
-* 较直接使用浏览器原生`localStorage`对象，`natty-storage`在性能上做了很多改进。
+* 操作的不仅仅是`localStorage`和`sessionStorage`，还可以是内存对象`variable`。
+* 赋值、取值、删除值都可以使用路径(`path`)方式，而且内部自动补全不存在的路径，大大减少了代码量。
+* 取值时，如果路径中间有不存在的值，如`get('a.b.c')`时，`a`对象不存在`b`键，不会报错，返回`undefined`。
+* 赋值可以直接使用`plain object`对象，取值也可以直接得到`plain object`，相对于原生的`(local|session)Storage.(set|get)Item`方法(赋值需要`JSON.stringify`，取值需要`JSON.parse`)，大大减少了代码量。
+* 当使用`type:localStorage`时，和直接使用浏览器原生`localStorage`相比，`natty-storage`在性能上做了很多改进。
   - 只有`set`和`remove`方法，才真正调用了原生`localStorage`对象。`get`和`has`方法，根本没有调用。
-  - 进一步，`set`和`remove`方法只调用一次原生`localStorage`对象(如果直接使用浏览器原生`localStorage`对象，先从`localStorage`中取出数据，然后修改数据，最后再存入`localStorage`)。
-* `set`、`get`、`has`和`remove`方法都支持`path`参数，相对于直接使用原生`localStorage/sessionStorage`对象，大大减少了代码量。
+  - 进一步，`set`和`remove`方法只调用一次原生`localStorage`对象。如果直接使用浏览器原生`localStorage`对象，则是两次(先从`localStorage`中取出数据，然后修改数据，最后再存入`localStorage`)。
 * 同步和异步方法同时支持。`set/asyncSet`、`get/asyncGet`、`has/asyncHas`、`remove/asyncRemove`和`destroy/asyncDestroy`。
 * 封装了三种有效性判断，标记(`tag`)、有效期长(`duration`)、有效期至(`until`)，不再重复编码。
 * 隐身模式下，有些浏览器不支持`localStorage`和`sessionStorage`，此时自动降级为`variable`模式。
-* `gzip`后的只有`2K`。
+* `gzip`后的只有`2.5K`。
 
 ## Install
 

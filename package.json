@@ -10,7 +10,8 @@
     "src",
     "README.md",
     "HISTORY.md",
-    "LICENSE"
+    "LICENSE",
+    "index.d.ts"
   ],
   "keywords": [
     "natty-storage",

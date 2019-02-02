@@ -2,7 +2,7 @@
  * rollup config
  *
  * @license MIT License
- * @author jias (https://github.com/jias/natty-fetch)
+ * @author jias (https://github.com/oner-team/oner-storage)
  * @note `node`还不支持`import`
  */
 const rollup = require('rollup')
@@ -20,8 +20,8 @@ const {
 } = argv
 
 const entryMap = {
-    dev: 'src/natty-storage.js',
-    prod: 'src/natty-storage.js',
+    dev: 'src/oner-storage.js',
+    prod: 'src/oner-storage.js',
     test: 'test/index.spec.js',
 }
 
@@ -35,10 +35,10 @@ const formatMap = {
 // 注意，目前dev和prod的构建内容一模一样，没有dev环境的log信息
 if (env === 'dev' || env === 'prod') {
     build(false).then(function () {
-        console.log('`natty-storage.js` was builded.\n')
+        console.log('`oner-storage.js` was builded.\n')
         return build(true)
     }).then(function () {
-        console.log('`natty-storage.min.js` was builded.\n')
+        console.log('`oner-storage.min.js` was builded.\n')
     })
 }
 
@@ -51,7 +51,7 @@ else if (env === 'test') {
 
 
 /**
- * 构建`natty-storage`
+ * 构建`oner-storage`
  * @param isUgly {Boolean} 是否压缩
  * @returns {Object} Promise instance
  */
@@ -85,7 +85,7 @@ function build(isUgly) {
 
                             // type = 'comment1': begin with '//'
                             // type = 'comment2': begin with '/*'
-                            return (type === 'comment2' && value.indexOf('! natty-storage') === 0)
+                            return (type === 'comment2' && value.indexOf('! oner-storage') === 0)
                         }
                     }
                 }) : null,
@@ -97,7 +97,7 @@ function build(isUgly) {
     }).then(function (bundle) {
 
         const distFile = [
-            'dist/natty-storage',
+            'dist/oner-storage',
             isUgly ? '.min' : '',
             '.js'
         ].filter(function (str) {
@@ -107,9 +107,9 @@ function build(isUgly) {
         return bundle.write({
             format: formatMap[env],
             dest: distFile,
-            moduleName: 'nattyStorage',
+            moduleName: 'onerStorage',
             sourceMap: true,
-            banner: '/*! ' + distFile.substr(5) + ' v' + pkg.version + ' | MIT License | fushan | https://github.com/jias/natty-storage */',
+            banner: '/*! ' + distFile.substr(5) + ' v' + pkg.version + ' | MIT License | jias | https://github.com/oner-team/oner-storage */',
         })
     })
 }

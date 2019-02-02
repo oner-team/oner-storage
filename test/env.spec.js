@@ -1,10 +1,10 @@
 // const _describe = function () {}
 // const _it = function (name, fn) {fn()}
 
-describe('nattyStorage.env', function() {
+describe('onerStorage.env', function() {
 
   it('get value by env', function () {
-    const storage = nattyStorage({
+    const storage = onerStorage({
       type: 'variable',
       key: 'config',
     })
@@ -12,7 +12,7 @@ describe('nattyStorage.env', function() {
     // 使用场景下这个值不是写死的，是运行环境的值
     const NODE_ENV = 'development'
 
-    storage.set('api', nattyStorage.env(NODE_ENV, {
+    storage.set('api', onerStorage.env(NODE_ENV, {
       development: 'http://0.0.0.0/api',
       production: 'http://foo.com/api',
     }))
@@ -21,7 +21,7 @@ describe('nattyStorage.env', function() {
   })
 
   it('get `undefined` by env', function () {
-    const storage = nattyStorage({
+    const storage = onerStorage({
       type: 'variable',
       key: 'config',
     })
@@ -29,7 +29,7 @@ describe('nattyStorage.env', function() {
     // 使用场景下这个值不是写死的，是运行环境的值
     const NODE_ENV = 'test'
 
-    storage.set('api', nattyStorage.env(NODE_ENV, {
+    storage.set('api', onerStorage.env(NODE_ENV, {
       development: 'http://0.0.0.0/api',
       production: 'http://foo.com/api',
     }))
@@ -38,7 +38,7 @@ describe('nattyStorage.env', function() {
   })
 
   it('can not set value on env instance', function () {
-    const storage = nattyStorage({
+    const storage = onerStorage({
       type: 'variable',
       key: 'config',
     })
@@ -46,7 +46,7 @@ describe('nattyStorage.env', function() {
     // 使用场景下这个值不是写死的，是运行环境的值
     const NODE_ENV = 'production'
 
-    storage.set('foo.api', nattyStorage.env(NODE_ENV, {
+    storage.set('foo.api', onerStorage.env(NODE_ENV, {
       development: 'http://0.0.0.0/api',
       production: 'http://foo.com/api',
     }))
@@ -59,13 +59,13 @@ describe('nattyStorage.env', function() {
   })
 
   it('env can not be used for localStorage', function () {
-    const storage = nattyStorage({
+    const storage = onerStorage({
       type: 'localStorage',
       key: 'config',
     })
 
     const hasErrorFn = () => {
-      storage.set('api', nattyStorage.env('development', {
+      storage.set('api', onerStorage.env('development', {
         development: 'http://0.0.0.0/api',
       }))
     }
@@ -74,13 +74,13 @@ describe('nattyStorage.env', function() {
   })
 
   it('env can not be used for sessionStorage', function () {
-    const storage = nattyStorage({
+    const storage = onerStorage({
       type: 'sessionStorage',
       key: 'config',
     })
 
     const hasErrorFn = () => {
-      storage.set('api', nattyStorage.env('development', {
+      storage.set('api', onerStorage.env('development', {
         development: 'http://0.0.0.0/api',
       }))
     }

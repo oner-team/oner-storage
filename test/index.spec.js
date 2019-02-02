@@ -1,2 +1,2 @@
-import './natty-storage.spec'
+import './oner-storage.spec'
 import './env.spec'

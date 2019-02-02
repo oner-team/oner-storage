@@ -1,10 +1,10 @@
 {
-  "name": "natty-storage",
-  "version": "2.2.0",
+  "name": "oner-storage",
+  "version": "3.0.0",
   "description": "",
-  "repository": "https://github.com/Jias/natty-storage.git",
-  "author": "gnosaij",
-  "main": "dist/natty-storage.js",
+  "repository": "https://github.com/oner-team/oner-storage.git",
+  "author": "jias",
+  "main": "dist/oner-storage.js",
   "files": [
     "dist",
     "src",
@@ -15,6 +15,7 @@
   ],
   "keywords": [
     "natty-storage",
+    "oner-storage",
     "localStorage",
     "sessionStorage",
     "data",

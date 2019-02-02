@@ -1,6 +1,6 @@
 declare class Storage {
 
-  constructor(options: nattyStorage.IStorageOptions)
+  constructor(options: onerStorage.IStorageOptions)
 
   private _lazyInit(): void
 
@@ -18,9 +18,9 @@ declare class Storage {
 
   sure(path: string): any
 
-  has(path: string): nattyStorage.IHasReturn
+  has(path: string): onerStorage.IHasReturn
 
-  asyncHas(path: string): Promise<nattyStorage.IHasReturn>
+  asyncHas(path: string): Promise<onerStorage.IHasReturn>
 
   remove(path?: string): void
 
@@ -40,11 +40,11 @@ declare class Env extends ParentEnv {
   get(): any
 }
 
-export = nattyStorage
+export = onerStorage
 
-declare function nattyStorage(options: nattyStorage.IStorageOptions): Storage
+declare function onerStorage(options: onerStorage.IStorageOptions): Storage
 
-declare namespace nattyStorage {
+declare namespace onerStorage {
 
   interface IStorageOptions {
     key: string

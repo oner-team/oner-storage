@@ -1,5 +1,15 @@
 ## Change log
 
+#### v3.0.0 / 2019-02-02
+
+从个人维护改为团队维护。
+
+* 新的工具名称`oner-storage`，原`nattyStorage`的地方直接换成`onerStorage`即可，使用方式不变。
+* 添加了`index.d.ts`文件，方便使用`typescript`的项目使用。
+
+#### v2.3.0 / 2019-02-02
+
+* 添加了`index.d.ts`文件，方便使用`typescript`的项目使用。
 
 #### v2.2.0 / 2017-12-04
 

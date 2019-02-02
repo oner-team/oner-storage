@@ -80,7 +80,7 @@ class Storage {
 
     // 更新验证条件，用于下次检查有效性
     // 只有真正调用了实例方法，才会更新验证数据。
-    // 这样可以在`nattyStorage.clean`方法中，将那些仅实例化但不使用的缓存实例清理掉。
+    // 这样可以在`onerStorage.clean`方法中，将那些仅实例化但不使用的缓存实例清理掉。
     this._storage.set(this._CHECK_KEY, this._checkData = {
       key: this.config.key,
       tag: this.config.tag,
@@ -485,17 +485,17 @@ function isSupportStorage() {
   return support
 }
 
-const nattyStorage = options => {
+const onerStorage = options => {
   return new Storage(options)
 }
 
-nattyStorage.version = '__VERSION__'
-nattyStorage._variable = variable
-nattyStorage.supportStorage = supportStorage
+onerStorage.version = '__VERSION__'
+onerStorage._variable = variable
+onerStorage.supportStorage = supportStorage
 
-nattyStorage.each = function (fn = noop) {
+onerStorage.each = function (fn = noop) {
   const map = {
-    variable: nattyStorage._variable,
+    variable: onerStorage._variable,
   }
 
   if (supportStorage) {
@@ -506,7 +506,7 @@ nattyStorage.each = function (fn = noop) {
   for (let type in map) {
     for (let key in map[type]) {
       if (map[type].hasOwnProperty(key) && key.indexOf('NSCheck:') > -1) {
-        let storage = nattyStorage({
+        let storage = onerStorage({
           key: key.match(/NSCheck:(.*)/)[1],
           type: type,
         })
@@ -517,7 +517,7 @@ nattyStorage.each = function (fn = noop) {
 }
 
 // 清理localStorage中过期的缓存
-nattyStorage.clean = function () {
+onerStorage.clean = function () {
   this.each(storage => {
     if (storage.isOutdated()) {
       storage.destroy()
@@ -525,15 +525,15 @@ nattyStorage.clean = function () {
   })
 }
 
-nattyStorage.list = function () {
+onerStorage.list = function () {
   this.each(storage => {
     hasConsole && console.log(storage.config.type, storage.config.key, storage.get())
   })
 }
 
 // 内置处理一次过期数据
-nattyStorage.clean()
+onerStorage.clean()
 
-nattyStorage.env = env
+onerStorage.env = env
 
-export default nattyStorage
+export default onerStorage

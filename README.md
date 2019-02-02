@@ -1,13 +1,13 @@
-# natty-storage
+# oner-storage
 
 
-[![npm version](https://img.shields.io/npm/v/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![download](https://img.shields.io/npm/dm/natty-storage.svg?style=flat)](https://www.npmjs.com/package/natty-storage) [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/jias/natty-storage/master/LICENSE)
+[![npm version](https://img.shields.io/npm/v/oner-storage.svg?style=flat)](https://www.npmjs.com/package/oner-storage) [![download](https://img.shields.io/npm/dm/oner-storage.svg?style=flat)](https://www.npmjs.com/package/oner-storage) [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/oner-team/oner-storage/master/LICENSE)
 
 Storage plus for javascript!
 
-> 🍻 开发者的体验至关重要！ `natty`系列的小工具，在微小的技术点上追求极致的开发体验。如果对你有帮助，请`Star`支持一下，感谢 :D
+> 🍻 开发者的体验至关重要！在微小的技术点上追求极致的开发体验。如果对你有帮助，请`Star`支持一下，感谢 :D
 
-> 🍟 `natty-fetch`中创建[灵活的多层级接口](https://github.com/jias/natty-fetch/blob/master/docs/clear_api.md)的实现，就是借助`natty-storage`实现的。
+> 🍟 `oner-fetch`中创建[灵活的多层级接口](https://github.com/oner-team/oner-fetch/blob/master/docs/clear_api.md)的实现，就是借助`oner-storage`实现的。
 
 ## Features
 
@@ -15,7 +15,7 @@ Storage plus for javascript!
 * 赋值、取值、删除值都可以使用路径(`path`)方式，而且内部自动补全不存在的路径，大大减少了代码量。
 * 取值时，如果路径中间有不存在的值，如`get('a.b.c')`时，`a`对象不存在`b`键，不会报错，返回`undefined`。
 * 赋值可以直接使用`plain object`对象，取值也可以直接得到`plain object`，相对于原生的`(local|session)Storage.(set|get)Item`方法(赋值需要`JSON.stringify`，取值需要`JSON.parse`)，大大减少了代码量。
-* 当使用`type:localStorage`时，和直接使用浏览器原生`localStorage`相比，`natty-storage`在性能上做了很多改进。
+* 当使用`type:localStorage`时，和直接使用浏览器原生`localStorage`相比，`oner-storage`在性能上做了很多改进。
   - 只有`set`和`remove`方法，才真正调用了原生`localStorage`对象。`get`和`has`方法，根本没有调用。
   - 进一步，`set`和`remove`方法只调用一次原生`localStorage`对象。如果直接使用浏览器原生`localStorage`对象，则是两次(先从`localStorage`中取出数据，然后修改数据，最后再存入`localStorage`)。
 * 同步和异步方法同时支持。`set/asyncSet`、`get/asyncGet`、`has/asyncHas`、`remove/asyncRemove`和`destroy/asyncDestroy`。
@@ -26,10 +26,10 @@ Storage plus for javascript!
 ## Install
 
 ```shell
-npm install natty-storage --save
+npm install oner-storage --save
 ```
 
-## const storage = nattyStorage(options)
+## const storage = onerStorage(options)
 
 创建缓存对象
 
@@ -45,7 +45,7 @@ npm install natty-storage --save
 示例
 
 ```js
-const storage = nattyStorage({
+const storage = onerStorage({
     type:     'localStorage',  // 缓存方式, 默认为'localStorage'
     key:      'ChinaCity',     // !!! 唯一必选的参数, 用于内部存储 !!!
     tag:      'v1.0',          // 缓存的标记, 用于判断是否有效
@@ -101,7 +101,7 @@ storage.set('boo.y', 'y')
 示例
 
 ```js
-const storage = nattyStorage({
+const storage = onerStorage({
   key: 'test',
   type: 'localStorage'
 })
@@ -153,7 +153,7 @@ storage.sure('server.apiPrefix')
 示例
 
 ```js
-const storage = nattyStorage({
+const storage = onerStorage({
   key: 'test',
   type: 'localStorage'
 })
@@ -225,42 +225,42 @@ storage.dump()
 // }
 ```
 
-## nattyStorage.clean()
+## onerStorage.clean()
 
-清理掉因为`until`和`duration`的有效期而过期的数据。在`natty-storage`加载后，内部会自动执行一次。
+清理掉因为`until`和`duration`的有效期而过期的数据。在`oner-storage`加载后，内部会自动执行一次。
 
 示例
 
 ```js
-nattyStorage.clean()
+onerStorage.clean()
 ```
 
-## nattyStorage.list()
+## onerStorage.list()
 
-在浏览器控制台打印出所有由`natty-storage`创建的缓存数据。三个类别的缓存都会被打印。该方法通常仅用于调试。
+在浏览器控制台打印出所有由`oner-storage`创建的缓存数据。三个类别的缓存都会被打印。该方法通常仅用于调试。
 
 示例
 
 ```js
-nattyStorage.list()
+onerStorage.list()
 ```
 
-## nattyStorage.each(fn)
+## onerStorage.each(fn)
 
-遍历由`natty-storage`创建的所有缓存对象，回调函数接受一个参数，即`storage`对象。上面的`clean`和`list`方法，内部就是调用该方法实现的。
+遍历由`oner-storage`创建的所有缓存对象，回调函数接受一个参数，即`storage`对象。上面的`clean`和`list`方法，内部就是调用该方法实现的。
 
 示例
 
 ```js
-// `nattyStorage.list`方法的内部实现
-nattyStorage.list = function () {
+// `onerStorage.list`方法的内部实现
+onerStorage.list = function () {
     this.each(function (storage) {
         hasConsole && console.log(storage.config.type, storage.config.key, storage.get())
     })
 }
 ```
 
-# nattyStorage.env(env, hash)
+# onerStorage.env(env, hash)
 
 创建一个`env`对象，该对象也可以直接作为节点的值。
 
@@ -268,7 +268,7 @@ nattyStorage.list = function () {
 
 - `env`对象一旦创建，它对应的值(就是创建时`env`对应的值)就不可再更改。
 - `env`对象取值的唯一方式是调用`get`方法。
-- `env`在`nattyStorage`不能再添加子节点。
+- `env`在`onerStorage`不能再添加子节点。
 
 参数
 
@@ -280,13 +280,13 @@ nattyStorage.list = function () {
 
 ```js
 // 这个`demo`应用在`node`层，`type`设置为`variable`
-const storage = nattyStorage({
+const storage = onerStorage({
   key: 'demo',
   type: 'variable'
 })
 
 // 设置`server`端的统一`api`前缀
-storage.set('apiPrefix', nattyStorage.env(process.env.NODE_ENV, {
+storage.set('apiPrefix', onerStorage.env(process.env.NODE_ENV, {
   development: 'http://0.0.0.0/api',
   production: 'http://foo.com/api',
 }))
@@ -302,7 +302,7 @@ storage.set('apiPrefix.foo', 'hello')
 
 ## IE8和IE9的兼容性
 
-`nattyStorage`依赖现代浏览器的两个对象。在非现代浏览器下，可以通过引入`polyfill`解决。
+`onerStorage`依赖现代浏览器的两个对象。在非现代浏览器下，可以通过引入`polyfill`解决。
 
 * `Promise`对象，推荐的`polyfill`：[lie](https://github.com/calvinmetcalf/lie)
 * `JSON`对象，推荐的`polyfill`：[json2](https://github.com/douglascrockford/JSON-js)
@@ -315,7 +315,7 @@ storage.set('apiPrefix.foo', 'hello')
 npm install es5-shim --save
 ```
 
-将下面的代码添加到`nattyStorage`标签之前
+将下面的代码添加到`onerStorage`标签之前
 
 ```html
 <!--[if lt IE 10]>

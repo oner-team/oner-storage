@@ -1,5 +1,5 @@
 // https://github.com/Automattic/expect.js
-document.getElementById('mode').innerHTML = nattyStorage.supportStorage ? 'localStorage可用' : 'localStorage不可用'
+document.getElementById('mode').innerHTML = onerStorage.supportStorage ? 'localStorage可用' : 'localStorage不可用'
 
 let count = 1
 const getId = function () {
@@ -9,14 +9,14 @@ const getId = function () {
 // const _describe = function () {}
 // const _it = function (name, fn) {fn()}
 
-describe('nattyStorage v__VERSION__ Unit Test', function() {
+describe('onerStorage v__VERSION__ Unit Test', function() {
 
   describe('static', function () {
     it('version v__VERSION__', function () {
-      expect(nattyStorage.version).to.equal('__VERSION__')
+      expect(onerStorage.version).to.equal('__VERSION__')
     })
     it('supportStorage', function () {
-      expect(nattyStorage.supportStorage).to.be.a('boolean')
+      expect(onerStorage.supportStorage).to.be.a('boolean')
     })
   })
 
@@ -24,7 +24,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     let ls
 
     beforeEach('reset', function () {
-      ls = nattyStorage({
+      ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -60,7 +60,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     let ls
 
     beforeEach('reset', function () {
-      ls = nattyStorage({
+      ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -112,7 +112,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     let ls
 
     beforeEach('reset', function () {
-      ls = nattyStorage({
+      ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -178,7 +178,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     })
 
     it(`setting non-string for the key, should throw error`, function () {
-      const foo = nattyStorage({
+      const foo = onerStorage({
         type: 'variable',
         key: 'foo',
       })
@@ -198,7 +198,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
   describe('`set/sure` method', function () {
     it('throw error when get undefined', function () {
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -223,7 +223,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     }
 
     beforeEach('reset', function () {
-      ls = nattyStorage({
+      ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -260,7 +260,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
   describe('destroy', function () {
     it('call method after `destroy` should throw error', function () {
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -279,7 +279,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     let ls
 
     beforeEach('reset', function () {
-      ls = nattyStorage({
+      ls = onerStorage({
         type: 'localStorage',
         key: 'foo',
       })
@@ -315,7 +315,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`tag` checking: invalid', function(){
       const id = getId()
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id, // 保证之前不存在
         tag: '1.0',
@@ -324,7 +324,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       ls.set('foo', 'x')
 
       // 版本过期
-      const ls2 = nattyStorage({
+      const ls2 = onerStorage({
         type: 'localStorage',
         key: id, // 保证之前存在
         tag: '2.0',
@@ -337,7 +337,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`tag` checking: valid', function() {
       const id = getId()
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id, // 保证之前不存在
         tag: '1.0',
@@ -346,7 +346,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       ls.set('foo', 'x')
 
       // 版本不过期
-      const ls2 = nattyStorage({
+      const ls2 = onerStorage({
         type: 'localStorage',
         key: id, // 保证之前存在
         tag: '1.0',
@@ -359,7 +359,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`duration` checking：invalid', function (done) {
       const id = 'test-expire'
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id,
         duration: 200,
@@ -369,7 +369,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
       // 利用`setTimeout`创建过期
       setTimeout(function () {
-        const ls2 = nattyStorage({
+        const ls2 = onerStorage({
           type: 'localStorage',
           key: id,
           duration: 200,
@@ -388,7 +388,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`duration` checking：valid', function () {
       const id = 'test-expire'
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id,
         duration: 200,
@@ -396,7 +396,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
       ls.set('foo', 'x')
 
-      const ls2 = nattyStorage({
+      const ls2 = onerStorage({
         type: 'localStorage',
         key: id,
         duration: 200,
@@ -409,7 +409,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`until` checking: invalid', function () {
       const id = 'until-invalid'
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id,
         until: new Date(new Date().getTime() -1000).getTime(), // 永远的上一秒
@@ -417,7 +417,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
       ls.set('foo', 'x')
 
-      const ls2 = nattyStorage({
+      const ls2 = onerStorage({
         type: 'localStorage',
         key: id,
       })
@@ -429,7 +429,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('`until` checking: valid', function () {
       const id = 'until-valid'
-      const ls = nattyStorage({
+      const ls = onerStorage({
         type: 'localStorage',
         key: id,
         until: new Date().getTime() + 1000*60*60,
@@ -437,7 +437,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
       ls.set('x', 'x')
 
-      const ls2 = nattyStorage({
+      const ls2 = onerStorage({
         type: 'localStorage',
         key: id,
       })
@@ -452,7 +452,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
     it('clean up `until` invalid storage', function () {
 
       // 这是一个过期的缓存对象
-      const ls1 = nattyStorage({
+      const ls1 = onerStorage({
         type: 'localStorage',
         key: 'clean',
         until: new Date(new Date().getTime() -1000).getTime(), // 永远的上一秒
@@ -461,10 +461,10 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       ls1.set('foo', 'x')
 
       // ls1的数据被清掉了
-      nattyStorage.clean()
+      onerStorage.clean()
 
       // 不会有数据
-      const ls1next = nattyStorage({
+      const ls1next = onerStorage({
         type: 'localStorage',
         key: 'clean-until',
       })
@@ -475,7 +475,7 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
 
     it('clean up `duration` invalid storage', function (done) {
       // 这是一个过期的缓存对象
-      const ls1 = nattyStorage({
+      const ls1 = onerStorage({
         type: 'localStorage',
         key: 'clean-duration',
         duration: 100,
@@ -484,11 +484,11 @@ describe('nattyStorage v__VERSION__ Unit Test', function() {
       ls1.set('foo', 'x')
 
       // ls1的数据被清掉了
-      nattyStorage.clean()
+      onerStorage.clean()
 
       setTimeout(function () {
         // 不会有数据
-        const ls1next = nattyStorage({
+        const ls1next = onerStorage({
           type: 'localStorage',
           key: 'clean-duration',
         })
